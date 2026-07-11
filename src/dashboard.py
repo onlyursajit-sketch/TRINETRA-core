@@ -3,36 +3,24 @@ from datetime import datetime
 from src.market_engine import get_market_snapshot
 
 
-def format_number(value):
+WIDTH = 76
+
+
+def num(value):
     if value is None:
         return "N/A"
-
-    if isinstance(value, (int, float)):
-        return f"{value:,.2f}"
-
-    return str(value)
+    return f"{value:,.2f}"
 
 
-def calculate_change(current, previous):
-    if current is None or previous in (None, 0):
-        return None, None
-
-    change = current - previous
-    change_percent = (change / previous) * 100
-    return change, change_percent
-
-
-def get_direction(change):
-    if change is None:
-        return "UNKNOWN"
-
-    if change > 0:
-        return "UP"
-
-    if change < 0:
-        return "DOWN"
-
-    return "FLAT"
+def short_state(value):
+    states = {
+        "REGULAR": "OPEN",
+        "PRE": "PRE",
+        "POST": "POST",
+        "CLOSED": "CLOSED",
+        "UNKNOWN": "UNKNOWN",
+    }
+    return states.get(str(value).upper(), str(value).upper())
 
 
 def show_market_dashboard():
@@ -43,57 +31,44 @@ def show_market_dashboard():
     flat_count = 0
     error_count = 0
 
-    print("=" * 92)
-    print("TRINETRA LIVE MARKET DASHBOARD")
+    print("=" * WIDTH)
+    print("TRINETRA MARKET DASHBOARD")
     print("Updated:", datetime.now().strftime("%d-%m-%Y %H:%M:%S"))
-    print("=" * 92)
+    print("=" * WIDTH)
 
     print(
-        f"{'ASSET':12}"
-        f"{'PREVIOUS':>14}"
-        f"{'CURRENT':>14}"
-        f"{'CHANGE':>14}"
-        f"{'CHANGE %':>12}"
-        f"{'STATUS':>12}"
-        f"{'SOURCE':>14}"
+        f"{'ASSET':10}"
+        f"{'PREV':>10}"
+        f"{'OPEN':>10}"
+        f"{'HIGH':>10}"
+        f"{'LOW':>10}"
+        f"{'CURR':>10}"
+        f"{'CHG%':>8}"
     )
-
-    print("-" * 92)
+    print("-" * WIDTH)
 
     for name, data in market.items():
         if "error" in data:
             error_count += 1
-            print(
-                f"{name:12}"
-                f"{'N/A':>14}"
-                f"{'N/A':>14}"
-                f"{'N/A':>14}"
-                f"{'N/A':>12}"
-                f"{'ERROR':>12}"
-                f"{'Unavailable':>14}"
-            )
-            print(f"  Reason: {data['error']}")
+            print(f"{name:10}{'DATA ERROR':>66}")
+            print(f"Reason: {data['error'][:68]}")
             continue
 
-        current = data.get("regular_market_price")
         previous = data.get("previous_close")
-        source = data.get("source", "Unknown")
+        open_price = data.get("open")
+        high = data.get("high")
+        low = data.get("low")
+        current = data.get("current")
+        change = data.get("change")
+        change_percent = data.get("change_percent")
 
-        change, change_percent = calculate_change(current, previous)
-        direction = get_direction(change)
-
-        if direction == "UP":
-            up_count += 1
-        elif direction == "DOWN":
-            down_count += 1
-        elif direction == "FLAT":
-            flat_count += 1
-
-        change_text = (
-            f"{change:+,.2f}"
-            if change is not None
-            else "N/A"
-        )
+        if change is not None:
+            if change > 0:
+                up_count += 1
+            elif change < 0:
+                down_count += 1
+            else:
+                flat_count += 1
 
         percent_text = (
             f"{change_percent:+.2f}%"
@@ -102,21 +77,27 @@ def show_market_dashboard():
         )
 
         print(
-            f"{name:12}"
-            f"{format_number(previous):>14}"
-            f"{format_number(current):>14}"
-            f"{change_text:>14}"
-            f"{percent_text:>12}"
-            f"{direction:>12}"
-            f"{source:>14}"
+            f"{name:10}"
+            f"{num(previous):>10}"
+            f"{num(open_price):>10}"
+            f"{num(high):>10}"
+            f"{num(low):>10}"
+            f"{num(current):>10}"
+            f"{percent_text:>8}"
         )
 
-    print("-" * 92)
+        print(
+            f"  State:{short_state(data.get('market_state', 'UNKNOWN'))}"
+            f" | Source:{data.get('source', 'N/A')}"
+            f" | Data:{data.get('state', 'N/A').upper()}"
+        )
+
+    print("-" * WIDTH)
     print(
-        f"Summary: UP={up_count} | DOWN={down_count} | "
-        f"FLAT={flat_count} | ERRORS={error_count}"
+        f"UP:{up_count} | DOWN:{down_count} | "
+        f"FLAT:{flat_count} | ERR:{error_count}"
     )
-    print("=" * 92)
+    print("=" * WIDTH)
 
 
 if __name__ == "__main__":
