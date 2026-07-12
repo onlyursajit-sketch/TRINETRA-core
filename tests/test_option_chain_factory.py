@@ -153,7 +153,7 @@ class TestOptionChainFactory(unittest.TestCase):
 
         self.assertEqual(
             len(result["provider_errors"]),
-            2,
+            3,
         )
 
 
