@@ -2,8 +2,14 @@ from __future__ import annotations
 
 from typing import Any
 
+from src.global_command.global_command_center import (
+    GlobalCommandCenter,
+)
 from src.pipelines.options_analytics_pipeline import (
     OptionsAnalyticsPipeline,
+)
+from src.reports.global_market_report import (
+    GlobalMarketReportGenerator,
 )
 from src.reports.market_report import (
     MarketReportGenerator,
@@ -19,15 +25,20 @@ class MarketEngineError(Exception):
 
 class MarketEngine:
     """
-    TRINETRA MARKET orchestration engine.
+    TRINETRA end-to-end MARKET orchestration engine.
 
-    Current verified flow:
-    Options Pipeline
-        → Market Snapshot
-        → MARKET Report
-
-    India VIX and FII/DII payloads are dependency inputs.
-    Missing inputs are marked NO_DATA and are never fabricated.
+    Current flow:
+    Global Command Center
+        +
+    Options Analytics
+        +
+    India VIX
+        +
+    FII/DII
+        ↓
+    Unified Snapshot
+        ↓
+    Final MARKET Report
     """
 
     def __init__(
@@ -35,6 +46,8 @@ class MarketEngine:
         options_pipeline: OptionsAnalyticsPipeline | None = None,
         snapshot_engine: MarketSnapshotEngine | None = None,
         report_generator: MarketReportGenerator | None = None,
+        global_command_center: GlobalCommandCenter | None = None,
+        global_report_generator: GlobalMarketReportGenerator | None = None,
     ) -> None:
         self.options_pipeline = (
             options_pipeline
@@ -49,6 +62,16 @@ class MarketEngine:
         self.report_generator = (
             report_generator
             or MarketReportGenerator()
+        )
+
+        self.global_command_center = (
+            global_command_center
+            or GlobalCommandCenter()
+        )
+
+        self.global_report_generator = (
+            global_report_generator
+            or GlobalMarketReportGenerator()
         )
 
     @staticmethod
@@ -97,6 +120,10 @@ class MarketEngine:
     def build(
         self,
         symbol: str = "NIFTY",
+        global_payloads: dict[
+            str,
+            dict[str, Any]
+        ] | None = None,
         india_vix_payload: dict[str, Any] | None = None,
         fii_dii_payload: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
@@ -109,6 +136,14 @@ class MarketEngine:
 
         options_result = self.options_pipeline.run(
             clean_symbol
+        )
+
+        global_result = (
+            self.global_command_center.build(
+                global_payloads
+                if isinstance(global_payloads, dict)
+                else {}
+            )
         )
 
         vix_result = (
@@ -129,8 +164,20 @@ class MarketEngine:
             flows_result,
         )
 
-        report = self.report_generator.render(
+        global_report = (
+            self.global_report_generator.render(
+                global_result
+            )
+        )
+
+        market_report = self.report_generator.render(
             snapshot
+        )
+
+        final_report = (
+            global_report
+            + "\n\n"
+            + market_report
         )
 
         return {
@@ -139,17 +186,56 @@ class MarketEngine:
             "market_status": snapshot.get(
                 "market_status"
             ),
+            "global_health": global_result.get(
+                "health"
+            ),
+            "global_bias": global_result.get(
+                "global_bias"
+            ),
             "analytics_allowed": snapshot.get(
                 "analytics_allowed"
             ),
+            "global": global_result,
             "snapshot": snapshot,
-            "report": report,
+            "report": final_report,
         }
 
 
 if __name__ == "__main__":
     engine = MarketEngine()
 
-    result = engine.build("NIFTY")
+    fixture_global = {
+        "DOW_JONES": {
+            "previous_close": 45000,
+            "open": 45050,
+            "high": 45200,
+            "low": 44900,
+            "current": 45150,
+            "local_time": "13:30",
+            "market_status": "OPEN",
+            "why_moving": "Test fixture only.",
+            "source": "TEST_FIXTURE",
+            "source_confidence": 100,
+            "data_status": "LIVE",
+        },
+        "NASDAQ": {
+            "previous_close": 20000,
+            "open": 20020,
+            "high": 20100,
+            "low": 19850,
+            "current": 19900,
+            "local_time": "13:30",
+            "market_status": "OPEN",
+            "why_moving": "Test fixture only.",
+            "source": "TEST_FIXTURE",
+            "source_confidence": 100,
+            "data_status": "LIVE",
+        },
+    }
+
+    result = engine.build(
+        "NIFTY",
+        global_payloads=fixture_global,
+    )
 
     print(result["report"])
