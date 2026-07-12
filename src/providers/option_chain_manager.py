@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+from time import perf_counter
+
 from typing import Any
 
 from src.providers.provider_health import ProviderHealth
+from src.providers.provider_metrics import ProviderMetrics
 from src.providers.provider_ranker import ProviderRanker
 from src.providers.option_chain_provider import (
     OptionChainProvider,
@@ -37,6 +40,11 @@ class OptionChainManager:
 
         self.health = {
             id(provider): ProviderHealth()
+            for provider in self.providers
+        }
+
+        self.metrics = {
+            id(provider): ProviderMetrics()
             for provider in self.providers
         }
 
@@ -88,6 +96,8 @@ class OptionChainManager:
                 )
                 continue
 
+            start = perf_counter()
+
             try:
                 result = provider.fetch(
                     clean_symbol
@@ -117,6 +127,10 @@ class OptionChainManager:
 
                 provider_health.record_success()
 
+                self.metrics[id(provider)].record_success(
+                    (perf_counter() - start) * 1000.0
+                )
+
                 return {
                     **result,
                     "manager_status": "SUCCESS",
@@ -127,6 +141,10 @@ class OptionChainManager:
 
             except Exception as exc:
                 provider_health.record_failure(exc)
+
+                self.metrics[id(provider)].record_failure(
+                    (perf_counter() - start) * 1000.0
+                )
 
                 errors.append(
                     f"{provider_name}: {exc}"
@@ -152,10 +170,15 @@ class OptionChainManager:
         for provider in self.providers:
             health = self.health[id(provider)]
 
+            metrics = self.metrics[id(provider)]
+
             report[provider.name] = {
                 "success_count": health.success_count,
                 "failure_count": health.failure_count,
                 "success_rate": health.success_rate,
+                "total_calls": metrics.total_calls,
+                "average_latency_ms": metrics.average_latency_ms,
+                "last_latency_ms": metrics.last_latency_ms,
                 "available": health.is_available(),
                 "circuit_open_until": (
                     health.circuit_open_until.isoformat()
