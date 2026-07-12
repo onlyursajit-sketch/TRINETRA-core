@@ -5,6 +5,9 @@ from typing import Any
 
 from src.cache.json_cache import JSONCache, JSONCacheError
 from src.collectors.nse_option_chain import NSEOptionChainCollector
+from src.providers.option_chain_factory import (
+    ManagedOptionChainCollector,
+)
 from src.engines.max_pain_engine import (
     MaxPainEngine,
     MaxPainEngineError,
@@ -41,13 +44,18 @@ class OptionsAnalyticsPipeline:
 
     def __init__(
         self,
-        collector: NSEOptionChainCollector | None = None,
+        collector: Any | None = None,
         oi_engine: OIEngine | None = None,
         pcr_engine: PCREngine | None = None,
         max_pain_engine: MaxPainEngine | None = None,
         cache: JSONCache | None = None,
     ) -> None:
-        self.collector = collector or NSEOptionChainCollector()
+        self.collector = (
+            collector
+            or ManagedOptionChainCollector(
+                cache=cache
+            )
+        )
         self.oi_engine = oi_engine or OIEngine()
         self.pcr_engine = pcr_engine or PCREngine()
         self.max_pain_engine = max_pain_engine or MaxPainEngine()

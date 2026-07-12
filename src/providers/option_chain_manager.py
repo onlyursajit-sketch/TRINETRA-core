@@ -9,16 +9,15 @@ from src.providers.option_chain_provider import (
 
 
 class OptionChainManagerError(Exception):
-    """Raised when all option-chain sources fail."""
+    """Raised when option-chain manager input is invalid."""
 
 
 class OptionChainManager:
     """
-    TRINETRA option-chain source manager.
+    Provider priority chain:
 
-    Flow:
-    Primary provider
-        -> fallback provider
+    Primary live provider
+        -> cache provider
         -> NO_DATA
     """
 
@@ -26,38 +25,77 @@ class OptionChainManager:
         self,
         providers: list[OptionChainProvider],
     ) -> None:
+        if not isinstance(providers, list):
+            raise OptionChainManagerError(
+                "Providers must be supplied as a list."
+            )
+
         self.providers = providers
 
     def fetch(
         self,
         symbol: str,
     ) -> dict[str, Any]:
+        if not isinstance(symbol, str):
+            raise OptionChainManagerError(
+                "Symbol must be a string."
+            )
+
+        clean_symbol = symbol.strip().upper()
+
+        if not clean_symbol:
+            raise OptionChainManagerError(
+                "Symbol cannot be empty."
+            )
+
         errors: list[str] = []
 
-        for provider in self.providers:
+        for index, provider in enumerate(
+            self.providers
+        ):
+            provider_name = getattr(
+                provider,
+                "name",
+                provider.__class__.__name__,
+            )
+
             try:
-                result = provider.fetch(symbol)
+                result = provider.fetch(
+                    clean_symbol
+                )
 
                 if not isinstance(result, dict):
                     raise OptionChainProviderError(
                         "Provider returned invalid payload."
                     )
 
+                records = result.get("records")
+
+                if not isinstance(records, list):
+                    raise OptionChainProviderError(
+                        "Provider records must be a list."
+                    )
+
+                if not records:
+                    raise OptionChainProviderError(
+                        "Provider returned empty records."
+                    )
+
                 return {
                     **result,
                     "manager_status": "SUCCESS",
-                    "provider_used": provider.name,
-                    "fallback_used": bool(errors),
+                    "provider_used": provider_name,
+                    "fallback_used": index > 0,
                     "provider_errors": errors,
                 }
 
             except Exception as exc:
                 errors.append(
-                    f"{provider.name}: {exc}"
+                    f"{provider_name}: {exc}"
                 )
 
         return {
-            "symbol": symbol.strip().upper(),
+            "symbol": clean_symbol,
             "records": [],
             "source": None,
             "source_confidence": 0,
