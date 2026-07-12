@@ -35,34 +35,20 @@ class RecoveringProvider(OptionChainProvider):
         }
 
 
-class BackupProvider(OptionChainProvider):
-    name = "BACKUP"
-    confidence = 70
-
-    def fetch(self, symbol: str) -> dict:
-        return {
-            "symbol": self.clean_symbol(symbol),
-            "records": [{"strike_price": 25000}],
-            "source": self.name,
-            "source_confidence": 70,
-            "data_status": "LIVE",
-        }
-
-
 class TestProviderCircuitRecovery(unittest.TestCase):
     def test_provider_recovers_after_cooldown(self) -> None:
         recovering = RecoveringProvider()
 
-        manager = OptionChainManager(
-            [recovering, BackupProvider()]
-        )
+        manager = OptionChainManager([recovering])
 
         for _ in range(3):
             manager.fetch("NIFTY")
 
         health = manager.health[id(recovering)]
 
-        self.assertFalse(health.is_available())
+        self.assertFalse(
+            health.is_available()
+        )
 
         health.circuit_open_until = (
             datetime.now(timezone.utc)
