@@ -1,0 +1,242 @@
+from __future__ import annotations
+
+import unittest
+
+from src.decision.ai_decision import (
+    AIDecisionError,
+    AIDecisionHub,
+)
+
+
+def make_market_result(
+    global_bias: str = "BULLISH",
+    global_confidence: float = 90,
+    market_status: str = "LIVE",
+    analytics_allowed: bool = True,
+    source_confidence: float = 90,
+    snapshot_confidence: str = "HIGH",
+    institutional_score: float = 40,
+    pcr: float = 1.08,
+    vix_regime: str = "LOW",
+    vix_direction: str = "DOWN",
+    flow_bias: str = "DOMESTICALLY_SUPPORTED",
+) -> dict:
+    return {
+        "global": {
+            "global_bias": global_bias,
+            "source_confidence": global_confidence,
+            "warnings": [],
+        },
+        "snapshot": {
+            "market_status": market_status,
+            "analytics_allowed": analytics_allowed,
+            "source_confidence": source_confidence,
+            "confidence": snapshot_confidence,
+            "institutional_score": institutional_score,
+            "warnings": [],
+            "pcr": {
+                "overall_pcr": pcr,
+            },
+            "india_vix": {
+                "risk_regime": vix_regime,
+                "direction": vix_direction,
+            },
+            "fii_dii": {
+                "market_bias": flow_bias,
+            },
+        },
+    }
+
+
+class TestAIDecisionHub(unittest.TestCase):
+    def setUp(self) -> None:
+        self.engine = AIDecisionHub()
+
+    def test_bullish_alignment(self) -> None:
+        result = self.engine.decide(
+            make_market_result()
+        )
+
+        self.assertEqual(
+            result["decision"],
+            "BUY_BIAS",
+        )
+
+        self.assertEqual(
+            result["action"],
+            "WAIT_FOR_LONG_CONFIRMATION",
+        )
+
+        self.assertEqual(
+            result["risk"],
+            "LOW",
+        )
+
+    def test_bearish_alignment(self) -> None:
+        result = self.engine.decide(
+            make_market_result(
+                global_bias="STRONG_BEARISH",
+                institutional_score=-45,
+                pcr=0.70,
+                vix_regime="HIGH",
+                vix_direction="UP",
+                flow_bias="FII_SELLING_DOMINANT",
+            )
+        )
+
+        self.assertEqual(
+            result["decision"],
+            "SELL_BIAS",
+        )
+
+        self.assertEqual(
+            result["action"],
+            "WAIT_FOR_SHORT_CONFIRMATION",
+        )
+
+        self.assertIn(
+            result["risk"],
+            {"MEDIUM", "HIGH"},
+        )
+
+    def test_neutral_alignment(self) -> None:
+        result = self.engine.decide(
+            make_market_result(
+                global_bias="NEUTRAL",
+                institutional_score=0,
+                pcr=0.95,
+                flow_bias="UNAVAILABLE",
+            )
+        )
+
+        self.assertEqual(
+            result["decision"],
+            "WAIT",
+        )
+
+        self.assertEqual(
+            result["action"],
+            "WAIT",
+        )
+
+    def test_no_data_blocks_trade(self) -> None:
+        result = self.engine.decide(
+            make_market_result(
+                market_status="NO_DATA",
+                analytics_allowed=False,
+                source_confidence=0,
+                global_confidence=0,
+                snapshot_confidence="NONE",
+            )
+        )
+
+        self.assertEqual(
+            result["decision"],
+            "NO_TRADE",
+        )
+
+        self.assertEqual(
+            result["action"],
+            "WAIT_FOR_VERIFIED_DATA",
+        )
+
+        self.assertEqual(
+            result["confidence"],
+            "NONE",
+        )
+
+    def test_low_confidence_blocks_trade(self) -> None:
+        result = self.engine.decide(
+            make_market_result(
+                source_confidence=40,
+                global_confidence=40,
+            )
+        )
+
+        self.assertEqual(
+            result["decision"],
+            "NO_TRADE",
+        )
+
+        self.assertIn(
+            "Combined source confidence is below 50%.",
+            result["reasons"],
+        )
+
+    def test_high_vix_warning(self) -> None:
+        result = self.engine.decide(
+            make_market_result(
+                vix_regime="HIGH",
+                vix_direction="UP",
+            )
+        )
+
+        self.assertIn(
+            "HIGH_VOLATILITY",
+            result["warnings"],
+        )
+
+    def test_extreme_vix_warning(self) -> None:
+        result = self.engine.decide(
+            make_market_result(
+                vix_regime="EXTREME",
+                vix_direction="UP",
+            )
+        )
+
+        self.assertIn(
+            "EXTREME_VOLATILITY",
+            result["warnings"],
+        )
+
+    def test_crowded_pcr_warning(self) -> None:
+        result = self.engine.decide(
+            make_market_result(
+                pcr=1.70,
+            )
+        )
+
+        self.assertIn(
+            "CROWDED_PCR_POSITIONING",
+            result["warnings"],
+        )
+
+    def test_invalid_input_blocked(self) -> None:
+        with self.assertRaises(
+            AIDecisionError
+        ):
+            self.engine.decide(
+                []  # type: ignore[arg-type]
+            )
+
+    def test_score_clamped(self) -> None:
+        result = self.engine.decide(
+            make_market_result(
+                global_bias="STRONG_BULLISH",
+                institutional_score=100,
+                pcr=1.10,
+                flow_bias="BULLISH",
+            )
+        )
+
+        self.assertLessEqual(
+            result["score"],
+            100.0,
+        )
+
+    def test_risk_clamped(self) -> None:
+        result = self.engine.decide(
+            make_market_result(
+                vix_regime="EXTREME",
+                vix_direction="UP",
+            )
+        )
+
+        self.assertLessEqual(
+            result["risk_score"],
+            100.0,
+        )
+
+
+if __name__ == "__main__":
+    unittest.main(verbosity=2)
