@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 from src.providers.provider_health import ProviderHealth
+from src.providers.provider_ranker import ProviderRanker
 from src.providers.option_chain_provider import (
     OptionChainProvider,
     OptionChainProviderError,
@@ -39,6 +40,8 @@ class OptionChainManager:
             for provider in self.providers
         }
 
+        self.ranker = ProviderRanker()
+
     def fetch(
 
         self,
@@ -58,9 +61,19 @@ class OptionChainManager:
 
         errors: list[str] = []
 
-        for index, provider in enumerate(
-            self.providers
-        ):
+        ranked = self.ranker.rank(
+            self.providers,
+            self.health,
+        )
+
+        provider_map = {
+            id(provider): provider
+            for provider in self.providers
+        }
+
+        for attempt_index, rank in enumerate(ranked):
+            provider = provider_map[rank.provider_id]
+            index = rank.original_priority
             provider_name = getattr(
                 provider,
                 "name",
