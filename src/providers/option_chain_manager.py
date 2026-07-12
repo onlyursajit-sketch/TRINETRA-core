@@ -81,10 +81,15 @@ class OptionChainManager:
                         "Provider returned empty records."
                     )
 
+                resolved_provider_name = (
+                    result.get("provider_name")
+                    or provider_name
+                )
+
                 return {
                     **result,
                     "manager_status": "SUCCESS",
-                    "provider_used": provider_name,
+                    "provider_used": resolved_provider_name,
                     "fallback_used": index > 0,
                     "provider_errors": errors,
                 }

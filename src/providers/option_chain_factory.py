@@ -3,6 +3,9 @@ from __future__ import annotations
 from typing import Any
 
 from src.cache.json_cache import JSONCache
+from src.providers.broker.broker_provider import (
+    BrokerOptionChainProvider,
+)
 from src.providers.live.json_cache_provider import (
     JSONCacheOptionChainProvider,
 )
@@ -17,6 +20,7 @@ from src.providers.option_chain_manager import (
 def create_default_option_chain_manager(
     cache: JSONCache | None = None,
     collector: Any | None = None,
+    broker_provider: Any | None = None,
     allow_stale: bool = True,
 ) -> OptionChainManager:
     """
@@ -28,8 +32,23 @@ def create_default_option_chain_manager(
     3. NO_DATA from OptionChainManager
     """
 
-    live_provider = NSELiveOptionChainProvider(
-        collector=collector
+    live_provider = WriteThroughOptionChainProvider(
+    provider=NSELiveOptionChainProvider(
+        collector=collector,
+    ),
+    cache=cache,
+    ttl_seconds=300,
+    )
+
+    raw_broker_provider = (
+        broker_provider
+        or BrokerOptionChainProvider()
+    )
+
+    broker = WriteThroughOptionChainProvider(
+        provider=raw_broker_provider,
+        cache=cache,
+        ttl_seconds=300,
     )
 
     cache_provider = JSONCacheOptionChainProvider(
@@ -40,6 +59,7 @@ def create_default_option_chain_manager(
     return OptionChainManager(
         providers=[
             live_provider,
+            broker,
             cache_provider,
         ]
     )
@@ -58,6 +78,7 @@ class ManagedOptionChainCollector:
         manager: OptionChainManager | None = None,
         cache: JSONCache | None = None,
         collector: Any | None = None,
+        broker_provider: Any | None = None,
         allow_stale: bool = True,
     ) -> None:
         self.manager = (
@@ -65,6 +86,7 @@ class ManagedOptionChainCollector:
             or create_default_option_chain_manager(
                 cache=cache,
                 collector=collector,
+                broker_provider=broker_provider,
                 allow_stale=allow_stale,
             )
         )
@@ -74,3 +96,7 @@ class ManagedOptionChainCollector:
         symbol: str,
     ) -> dict[str, Any]:
         return self.manager.fetch(symbol)
+
+from src.providers.live.write_through_provider import (
+    WriteThroughOptionChainProvider,
+)
