@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from src.decision.ai_decision import AIDecisionHub
+
 from src.global_command.global_command_center import (
     GlobalCommandCenter,
 )
@@ -174,10 +176,69 @@ class MarketEngine:
             snapshot
         )
 
+        decision = AIDecisionHub().decide(
+            {
+                "global": global_result,
+                "snapshot": snapshot,
+            }
+        )
+
+        ai_lines = [
+            "=" * 68,
+            "TRINETRA — AI DECISION HUB",
+            "=" * 68,
+            f"Decision            : {decision['decision']}",
+            f"Action              : {decision['action']}",
+            f"Score               : {decision['score']}",
+            f"Confidence Score    : {decision['confidence_score']}",
+            f"Confidence          : {decision['confidence']}",
+            f"Risk Score          : {decision['risk_score']}",
+            f"Risk                : {decision['risk']}",
+            "",
+            "Reasons:",
+        ]
+
+        reasons = decision.get("reasons", [])
+
+        if reasons:
+            for reason in reasons:
+                ai_lines.append(f"- {reason}")
+        else:
+            ai_lines.append("- NONE")
+
+        ai_lines.extend(
+            [
+                "",
+                "Warnings:",
+            ]
+        )
+
+        decision_warnings = decision.get(
+            "warnings",
+            [],
+        )
+
+        if decision_warnings:
+            for warning in decision_warnings:
+                ai_lines.append(f"- {warning}")
+        else:
+            ai_lines.append("- NONE")
+
+        ai_lines.extend(
+            [
+                "",
+                f"Rule                : {decision['rule']}",
+            ]
+        )
+
+        ai_report = "\n".join(ai_lines)
+
         final_report = (
             global_report
             + "\n\n"
             + market_report
+            + "\n\n"
+            + ai_report
         )
 
         return {
@@ -197,6 +258,7 @@ class MarketEngine:
             ),
             "global": global_result,
             "snapshot": snapshot,
+            "ai_decision": decision,
             "report": final_report,
         }
 
@@ -239,3 +301,6 @@ if __name__ == "__main__":
     )
 
     print(result["report"])
+
+
+
