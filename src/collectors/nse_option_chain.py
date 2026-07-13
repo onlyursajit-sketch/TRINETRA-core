@@ -30,9 +30,9 @@ class NSEOptionChainCollector:
     def __init__(
         self,
         cache_dir: str = "cache/option_chain",
-        timeout: int = 30,
-        retries: int = 5,
-    ) -> None:
+        timeout: int = 10,
+        retries: int = 2,
+     ) -> None:
         self.cache_dir = Path(cache_dir)
         self.cache_dir.mkdir(parents=True, exist_ok=True)
 
@@ -74,7 +74,7 @@ class NSEOptionChainCollector:
             timeout=self.timeout,
         )
         response.raise_for_status()
-        time.sleep(2)
+        time.sleep(0.5)
 
     def _fetch_raw(self, symbol: str) -> dict[str, Any]:
         url = self.OPTION_CHAIN_URL.format(symbol=symbol)
@@ -89,10 +89,11 @@ class NSEOptionChainCollector:
                     timeout=self.timeout,
                 )
 
-                if response.status_code == 401:
+                if response.status_code in (401, 403):
                     self.session.cookies.clear()
                     raise NSEOptionChainError(
-                        "NSE session rejected with HTTP 401."
+                        f"NSE session rejected with HTTP "
+                        f"{response.status_code}."
                     )
 
                 response.raise_for_status()
@@ -106,18 +107,27 @@ class NSEOptionChainCollector:
 
                 return data
 
+            except requests.Timeout:
+                last_error = NSEOptionChainError(
+                    f"NSE request timed out after "
+                    f"{self.timeout}s."
+                )
+
+            except NSEOptionChainError:
+                raise
+
             except (
                 requests.RequestException,
                 ValueError,
-                NSEOptionChainError,
             ) as exc:
                 last_error = exc
 
-                if attempt < self.retries:
-                    time.sleep(attempt * 2)
+            if attempt < self.retries:
+                time.sleep(min(attempt, 2))
 
         raise NSEOptionChainError(
-            f"Failed to fetch option chain for {symbol}: {last_error}"
+            f"Failed to fetch option chain for "
+            f"{symbol}: {last_error}"
         )
 
     def _validate_response(
@@ -320,3 +330,4 @@ if __name__ == "__main__":
     print(f"Data Status     : {result['data_status']}")
     print(f"Fallback Reason : {result['fallback_reason']}")
     print(f"Cache Path      : {result['cache_path']}")
+
