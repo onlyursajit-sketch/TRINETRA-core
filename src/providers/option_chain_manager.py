@@ -150,6 +150,12 @@ class OptionChainManager:
                     f"{provider_name}: {exc}"
                 )
 
+        fallback_reason = (
+            "; ".join(errors)
+            if errors
+            else "No option-chain provider returned usable data."
+        )
+
         return {
             "symbol": clean_symbol,
             "records": [],
@@ -159,6 +165,7 @@ class OptionChainManager:
             "manager_status": "FAILED",
             "provider_used": None,
             "fallback_used": False,
+            "fallback_reason": fallback_reason,
             "provider_errors": errors,
         }
 

@@ -1,41 +1,51 @@
+from __future__ import annotations
+
+import unittest
+
 from src.intelligence.ai_decision_engine import AIDecisionEngine
 from src.intelligence.market_context import MarketContext
 
 
-def test_buy_signal():
-    engine = AIDecisionEngine()
+class TestAIDecisionEngine(unittest.TestCase):
+    def setUp(self) -> None:
+        self.engine = AIDecisionEngine()
 
-    ctx = MarketContext(symbol="NIFTY")
-    ctx.confidence = 80
-    ctx.fii_bias = "LONG"
-    ctx.oi_bullish = True
-    ctx.volume_bullish = True
+    def test_buy_signal(self) -> None:
+        context = MarketContext(
+            symbol="NIFTY",
+            confidence=80.0,
+            fii_bias="LONG",
+            oi_bullish=True,
+            volume_bullish=True,
+        )
 
-    result = engine.decide(ctx)
+        result = self.engine.decide(context)
 
-    assert result["action"] == "BUY"
+        self.assertEqual(result["action"], "BUY")
+
+    def test_sell_signal(self) -> None:
+        context = MarketContext(
+            symbol="NIFTY",
+            confidence=20.0,
+            fii_bias="SHORT",
+            oi_bullish=False,
+            volume_bullish=False,
+        )
+
+        result = self.engine.decide(context)
+
+        self.assertEqual(result["action"], "SELL")
+
+    def test_hold_signal(self) -> None:
+        context = MarketContext(
+            symbol="NIFTY",
+            confidence=50.0,
+        )
+
+        result = self.engine.decide(context)
+
+        self.assertEqual(result["action"], "HOLD")
 
 
-def test_sell_signal():
-    engine = AIDecisionEngine()
-
-    ctx = MarketContext(symbol="NIFTY")
-    ctx.confidence = 20
-    ctx.fii_bias = "SHORT"
-    ctx.oi_bullish = False
-    ctx.volume_bullish = False
-
-    result = engine.decide(ctx)
-
-    assert result["action"] == "SELL"
-
-
-def test_hold_signal():
-    engine = AIDecisionEngine()
-
-    ctx = MarketContext(symbol="NIFTY")
-    ctx.confidence = 50
-
-    result = engine.decide(ctx)
-
-    assert result["action"] == "HOLD"
+if __name__ == "__main__":
+    unittest.main(verbosity=2)
