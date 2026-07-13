@@ -8,6 +8,7 @@ from src.intelligence.market_context import MarketContext
 from src.intelligence.option_chain_context import (
     OptionChainContextAdapter,
 )
+from src.intelligence.regime_engine import RegimeEngine
 
 
 class ContextBuilder:
@@ -17,6 +18,7 @@ class ContextBuilder:
         self.option_chain_adapter = OptionChainContextAdapter()
         self.confidence_engine = ConfidenceEngine()
         self.validator = ContextValidator()
+        self.regime_engine = RegimeEngine()
 
     def build(
         self,
@@ -30,6 +32,8 @@ class ContextBuilder:
                 context,
                 options_result,
             )
+
+        self.regime_engine.detect(context)
 
         context.confidence = self.confidence_engine.calculate(
             context
