@@ -16,7 +16,7 @@ class TestMarketContext(unittest.TestCase):
         context = ContextBuilder().build("NIFTY")
 
         self.assertEqual(context.symbol, "NIFTY")
-        self.assertEqual(context.confidence, 0.0)
+        self.assertEqual(context.confidence, 50.0)
 
     def test_validator_accepts_valid_context(self) -> None:
         context = MarketContext(

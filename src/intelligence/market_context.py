@@ -14,7 +14,12 @@ class MarketContext:
     oi_bullish: bool = False
     volume_bullish: bool = False
 
-    fii_bias: str = "UNKNOWN"
-    regime: str = "UNKNOWN"
-
     confidence: float = 0.0
+    fii_cash: float = 0.0
+    dii_cash: float = 0.0
+
+    fii_bias: str = "UNKNOWN"
+    dii_bias: str = "UNKNOWN"
+    institutional_confidence: float = 0.0
+
+    regime: str = "UNKNOWN"
