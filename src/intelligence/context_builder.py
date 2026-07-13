@@ -9,6 +9,7 @@ from src.intelligence.option_chain_context import (
     OptionChainContextAdapter,
 )
 from src.intelligence.regime_engine import RegimeEngine
+from src.intelligence.vix_adapter import VIXAdapter
 
 
 class ContextBuilder:
@@ -19,11 +20,13 @@ class ContextBuilder:
         self.confidence_engine = ConfidenceEngine()
         self.validator = ContextValidator()
         self.regime_engine = RegimeEngine()
+        self.vix_adapter = VIXAdapter()
 
     def build(
         self,
         symbol: str,
         options_result: dict[str, Any] | None = None,
+        vix_payload: dict[str, Any] | None = None,
     ) -> MarketContext:
         context = MarketContext(symbol=symbol)
 
@@ -32,6 +35,9 @@ class ContextBuilder:
                 context,
                 options_result,
             )
+
+        if vix_payload is not None:
+            self.vix_adapter.apply(context, vix_payload)
 
         self.regime_engine.detect(context)
 
