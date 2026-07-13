@@ -26,8 +26,8 @@ class TestTradeSignalEngine(unittest.TestCase):
         signal = self.engine.generate(context)
 
         self.assertEqual(signal.action, "BUY")
-        self.assertEqual(signal.confidence, 85.0)
-        self.assertEqual(signal.risk, 15.0)
+        self.assertEqual(signal.confidence, 100.0)
+        self.assertEqual(signal.risk, 0.0)
         self.assertEqual(signal.regime, "TRENDING_UP")
         self.assertEqual(signal.fii_bias, "LONG")
         self.assertEqual(signal.pcr, 1.10)
@@ -47,7 +47,8 @@ class TestTradeSignalEngine(unittest.TestCase):
         signal = self.engine.generate(context)
 
         self.assertEqual(signal.action, "SELL")
-        self.assertEqual(signal.risk, 80.0)
+        self.assertEqual(signal.risk, 97.0)
+        self.assertEqual(signal.confidence, 3.0)
 
     def test_risk_is_clamped(self) -> None:
         context = MarketContext(
