@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 from fastapi import FastAPI
+from dotenv import load_dotenv
+
+load_dotenv()
 
 from src.api.routes.health import router as health_router
 from src.api.routes.market import router as market_router
