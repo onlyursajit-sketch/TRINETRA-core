@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+import os
+
 from typing import Any
 
 from src.cache.json_cache import JSONCache
 from src.providers.broker.broker_provider import (
     BrokerOptionChainProvider,
+    DhanOptionChainProvider,
 )
 from src.providers.live.json_cache_provider import (
     JSONCacheOptionChainProvider,
@@ -40,10 +43,21 @@ def create_default_option_chain_manager(
     ttl_seconds=300,
     )
 
-    raw_broker_provider = (
-        broker_provider
-        or BrokerOptionChainProvider()
-    )
+    raw_broker_provider = broker_provider
+
+    if raw_broker_provider is None:
+        dhan_client_id = os.getenv("DHAN_CLIENT_ID")
+        dhan_access_token = os.getenv("DHAN_ACCESS_TOKEN")
+        dhan_expiry = os.getenv("DHAN_OPTION_EXPIRY")
+
+        if dhan_client_id and dhan_access_token and dhan_expiry:
+            raw_broker_provider = DhanOptionChainProvider(
+                client_id=dhan_client_id,
+                access_token=dhan_access_token,
+                expiry=dhan_expiry,
+            )
+        else:
+            raw_broker_provider = BrokerOptionChainProvider()
 
     broker = WriteThroughOptionChainProvider(
         provider=raw_broker_provider,

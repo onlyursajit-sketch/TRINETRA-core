@@ -159,3 +159,66 @@ class TestOptionChainFactory(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
+
+
+def test_factory_uses_configured_dhan_provider() -> None:
+    from src.providers.broker.broker_provider import DhanOptionChainProvider
+    from src.providers.live.write_through_provider import (
+        WriteThroughOptionChainProvider,
+    )
+
+    dhan = DhanOptionChainProvider(
+        client_id="demo-client",
+        access_token="demo-token",
+        expiry="2026-07-16",
+    )
+
+    manager = create_default_option_chain_manager(
+        cache=JSONCache(base_dir=tempfile.mkdtemp()),
+        collector=FakeLiveCollectorFailure(),
+        broker_provider=dhan,
+    )
+
+    assert len(manager.providers) == 3
+
+    broker_wrapper = manager.providers[1]
+    assert isinstance(
+        broker_wrapper,
+        WriteThroughOptionChainProvider,
+    )
+    assert broker_wrapper.provider is dhan
+
+
+def test_factory_auto_configures_dhan_from_environment() -> None:
+    from unittest.mock import patch
+
+    from src.providers.broker.broker_provider import DhanOptionChainProvider
+    from src.providers.live.write_through_provider import (
+        WriteThroughOptionChainProvider,
+    )
+
+    with patch.dict(
+        "os.environ",
+        {
+            "DHAN_CLIENT_ID": "demo-client",
+            "DHAN_ACCESS_TOKEN": "demo-token",
+            "DHAN_OPTION_EXPIRY": "2026-07-16",
+        },
+        clear=False,
+    ):
+        manager = create_default_option_chain_manager(
+            cache=JSONCache(base_dir=tempfile.mkdtemp()),
+            collector=FakeLiveCollectorFailure(),
+        )
+
+    broker_wrapper = manager.providers[1]
+
+    assert isinstance(
+        broker_wrapper,
+        WriteThroughOptionChainProvider,
+    )
+    assert isinstance(
+        broker_wrapper.provider,
+        DhanOptionChainProvider,
+    )
+    assert broker_wrapper.provider.expiry == "2026-07-16"
