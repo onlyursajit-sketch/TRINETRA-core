@@ -180,7 +180,13 @@ class OptionChainManager:
             health = self.health[id(provider)]
             metrics = self.metrics[id(provider)]
 
-            base_name = provider.name
+            inner_provider = getattr(provider, "provider", None)
+            base_name = getattr(
+                inner_provider,
+                "name",
+                provider.name,
+            )
+
             name_counts[base_name] = name_counts.get(base_name, 0) + 1
 
             report_key = (

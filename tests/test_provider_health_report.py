@@ -91,3 +91,41 @@ def test_health_report_preserves_providers_with_same_wrapper_name() -> None:
     report = manager.provider_health_report()
 
     assert len(report) == 2
+
+
+def test_health_report_uses_inner_provider_name_for_wrappers() -> None:
+    from src.providers.live.write_through_provider import (
+        WriteThroughOptionChainProvider,
+    )
+    from src.providers.option_chain_manager import OptionChainManager
+
+    class InnerProvider:
+        confidence = 90
+
+        def __init__(self, name: str) -> None:
+            self.name = name
+
+        def fetch(self, symbol: str) -> dict:
+            return {
+                "symbol": symbol,
+                "records": [],
+                "source": self.name,
+                "data_status": "NO_DATA",
+            }
+
+    nse_wrapper = WriteThroughOptionChainProvider(
+        provider=InnerProvider("NSE"),
+    )
+    dhan_wrapper = WriteThroughOptionChainProvider(
+        provider=InnerProvider("DHAN"),
+    )
+
+    manager = OptionChainManager(
+        providers=[nse_wrapper, dhan_wrapper],
+    )
+
+    report = manager.provider_health_report()
+
+    assert "NSE" in report
+    assert "DHAN" in report
+    assert "WRITE_THROUGH" not in report
