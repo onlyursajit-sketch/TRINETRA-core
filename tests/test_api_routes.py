@@ -114,3 +114,59 @@ def test_trade_plan_validation() -> None:
     )
 
     assert response.status_code == 422
+
+
+class FakeProviderManager:
+    def provider_health_report(self) -> dict:
+        return {
+            "NSE": {
+                "success_count": 4,
+                "failure_count": 1,
+                "success_rate": 80.0,
+                "total_calls": 5,
+                "average_latency_ms": 120.5,
+                "last_latency_ms": 110.0,
+                "available": True,
+                "circuit_open_until": None,
+            },
+            "DHAN": {
+                "success_count": 0,
+                "failure_count": 2,
+                "success_rate": 0.0,
+                "total_calls": 2,
+                "average_latency_ms": 250.0,
+                "last_latency_ms": 240.0,
+                "available": False,
+                "circuit_open_until": None,
+            },
+        }
+
+    def manager_health_summary(self) -> dict:
+        return {
+            "status": "DEGRADED",
+            "providers_total": 2,
+            "providers_available": 1,
+            "providers_unavailable": 1,
+            "total_attempts": 7,
+            "total_successes": 4,
+            "overall_success_rate": 57.14,
+        }
+
+
+def test_provider_health_endpoint() -> None:
+    with patch.object(
+        market_route,
+        "provider_manager",
+        FakeProviderManager(),
+        create=True,
+    ):
+        response = client.get("/market/providers/health")
+
+    assert response.status_code == 200
+
+    payload = response.json()
+
+    assert payload["summary"]["status"] == "DEGRADED"
+    assert payload["summary"]["providers_available"] == 1
+    assert payload["providers"]["NSE"]["available"] is True
+    assert payload["providers"]["DHAN"]["failure_count"] == 2
