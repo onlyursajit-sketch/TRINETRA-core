@@ -63,3 +63,13 @@ class TestMarketContext(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
+
+
+def test_validator_rejects_invalid_institutional_confidence() -> None:
+    context = MarketContext(
+        symbol="NIFTY",
+        institutional_confidence=120.0,
+    )
+
+    with unittest.TestCase().assertRaises(ContextValidationError):
+        ContextValidator().validate(context)

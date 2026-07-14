@@ -35,3 +35,11 @@ class ContextValidator:
             raise ContextValidationError(
                 "Confidence must be between 0 and 100."
             )
+
+        if (
+            context.institutional_confidence < 0
+            or context.institutional_confidence > 100
+        ):
+            raise ContextValidationError(
+                "Institutional confidence must be between 0 and 100."
+            )
