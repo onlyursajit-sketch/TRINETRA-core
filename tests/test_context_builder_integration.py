@@ -39,3 +39,28 @@ class TestContextBuilderIntegration(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
+
+
+def test_context_builder_applies_institutional_flow() -> None:
+    from src.intelligence.context_builder import ContextBuilder
+    from src.intelligence.institutional_flow import InstitutionalFlow
+
+    flow = InstitutionalFlow(
+        fii_cash=1250.0,
+        dii_cash=-400.0,
+        fii_bias="LONG",
+        dii_bias="SHORT",
+        confidence=65.0,
+    )
+
+    context = ContextBuilder().build(
+        symbol="NIFTY",
+        institutional_flow=flow,
+    )
+
+    assert context.fii_cash == 1250.0
+    assert context.dii_cash == -400.0
+    assert context.fii_bias == "LONG"
+    assert context.dii_bias == "SHORT"
+    assert context.institutional_confidence == 65.0
+    assert context.confidence == 65.0
