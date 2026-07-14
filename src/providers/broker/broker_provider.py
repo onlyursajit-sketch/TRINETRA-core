@@ -106,25 +106,29 @@ class DhanOptionChainProvider(OptionChainProvider):
                 "Dhan expiry-list response contains invalid data."
             )
 
-        valid_expiries: list[str] = []
+        today = datetime.now().date()
+        valid_expiries: list[tuple[object, str]] = []
 
         for value in expiries:
             if not isinstance(value, str):
                 continue
 
             try:
-                datetime.strptime(value, "%Y-%m-%d")
+                parsed = datetime.strptime(value, "%Y-%m-%d").date()
             except ValueError:
                 continue
 
-            valid_expiries.append(value)
+            if parsed < today:
+                continue
+
+            valid_expiries.append((parsed, value))
 
         if not valid_expiries:
             raise RuntimeError(
-                "Dhan expiry-list API returned no valid expiry."
+                "Dhan expiry-list API returned no active expiry."
             )
 
-        return min(valid_expiries)
+        return min(valid_expiries, key=lambda item: item[0])[1]
 
     @staticmethod
     def _display_expiry(expiry: str) -> str:
