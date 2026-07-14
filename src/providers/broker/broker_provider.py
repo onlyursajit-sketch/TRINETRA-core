@@ -51,6 +51,7 @@ class DhanOptionChainProvider(OptionChainProvider):
     confidence = 90
 
     OPTION_CHAIN_URL = "https://api.dhan.co/v2/optionchain"
+    EXPIRY_LIST_URL = "https://api.dhan.co/v2/optionchain/expirylist"
 
     SYMBOLS = {
         "NIFTY": {
@@ -70,6 +71,60 @@ class DhanOptionChainProvider(OptionChainProvider):
         self.access_token = access_token or os.getenv("DHAN_ACCESS_TOKEN")
         self.expiry = expiry
         self.session = session or requests.Session()
+
+    def _resolve_expiry(
+        self,
+        instrument: dict[str, Any],
+    ) -> str:
+        response = self.session.post(
+            self.EXPIRY_LIST_URL,
+            headers={
+                "access-token": self.access_token,
+                "client-id": self.client_id,
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+            },
+            json={
+                "UnderlyingScrip": instrument["security_id"],
+                "UnderlyingSeg": instrument["segment"],
+            },
+            timeout=30,
+        )
+
+        payload = response.json()
+
+        if response.status_code != 200:
+            raise RuntimeError(
+                f"Dhan expiry-list API error "
+                f"{response.status_code}: {payload}"
+            )
+
+        expiries = payload.get("data", [])
+
+        if not isinstance(expiries, list):
+            raise RuntimeError(
+                "Dhan expiry-list response contains invalid data."
+            )
+
+        valid_expiries: list[str] = []
+
+        for value in expiries:
+            if not isinstance(value, str):
+                continue
+
+            try:
+                datetime.strptime(value, "%Y-%m-%d")
+            except ValueError:
+                continue
+
+            valid_expiries.append(value)
+
+        if not valid_expiries:
+            raise RuntimeError(
+                "Dhan expiry-list API returned no valid expiry."
+            )
+
+        return min(valid_expiries)
 
     @staticmethod
     def _display_expiry(expiry: str) -> str:
@@ -107,8 +162,7 @@ class DhanOptionChainProvider(OptionChainProvider):
                 "DHAN_CLIENT_ID or DHAN_ACCESS_TOKEN is missing."
             )
 
-        if not self.expiry:
-            raise RuntimeError("Dhan option-chain expiry is required.")
+        expiry = self.expiry or self._resolve_expiry(instrument)
 
         response = self.session.post(
             self.OPTION_CHAIN_URL,
@@ -121,7 +175,7 @@ class DhanOptionChainProvider(OptionChainProvider):
             json={
                 "UnderlyingScrip": instrument["security_id"],
                 "UnderlyingSeg": instrument["segment"],
-                "Expiry": self.expiry,
+                "Expiry": expiry,
             },
             timeout=30,
         )
@@ -140,7 +194,7 @@ class DhanOptionChainProvider(OptionChainProvider):
         if not isinstance(option_chain, dict):
             option_chain = {}
 
-        display_expiry = self._display_expiry(self.expiry)
+        display_expiry = self._display_expiry(expiry)
         records: list[dict[str, Any]] = []
 
         for strike, values in option_chain.items():
