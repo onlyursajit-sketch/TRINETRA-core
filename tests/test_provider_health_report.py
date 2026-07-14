@@ -64,3 +64,30 @@ class TestProviderHealthReport(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
+
+
+def test_health_report_preserves_providers_with_same_wrapper_name() -> None:
+    from src.providers.option_chain_manager import OptionChainManager
+
+    class FakeProvider:
+        name = "WRITE_THROUGH"
+        confidence = 90
+
+        def fetch(self, symbol: str) -> dict:
+            return {
+                "symbol": symbol,
+                "records": [],
+                "source": "TEST",
+                "data_status": "NO_DATA",
+            }
+
+    first = FakeProvider()
+    second = FakeProvider()
+
+    manager = OptionChainManager(
+        providers=[first, second],
+    )
+
+    report = manager.provider_health_report()
+
+    assert len(report) == 2

@@ -174,12 +174,22 @@ class OptionChainManager:
 
         report = {}
 
+        name_counts: dict[str, int] = {}
+
         for provider in self.providers:
             health = self.health[id(provider)]
-
             metrics = self.metrics[id(provider)]
 
-            report[provider.name] = {
+            base_name = provider.name
+            name_counts[base_name] = name_counts.get(base_name, 0) + 1
+
+            report_key = (
+                base_name
+                if name_counts[base_name] == 1
+                else f"{base_name}#{name_counts[base_name]}"
+            )
+
+            report[report_key] = {
                 "success_count": health.success_count,
                 "failure_count": health.failure_count,
                 "success_rate": health.success_rate,
