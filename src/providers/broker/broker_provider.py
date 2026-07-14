@@ -37,3 +37,139 @@ class BrokerOptionChainProvider(
                 "Broker API not configured."
             ),
         }
+
+from datetime import datetime
+import os
+
+import requests
+
+
+class DhanOptionChainProvider(OptionChainProvider):
+    """Fetches and normalizes Dhan option-chain data."""
+
+    name = "DHAN"
+    confidence = 90
+
+    OPTION_CHAIN_URL = "https://api.dhan.co/v2/optionchain"
+
+    SYMBOLS = {
+        "NIFTY": {
+            "security_id": 13,
+            "segment": "IDX_I",
+        },
+    }
+
+    def __init__(
+        self,
+        client_id: str | None = None,
+        access_token: str | None = None,
+        expiry: str | None = None,
+        session: Any | None = None,
+    ) -> None:
+        self.client_id = client_id or os.getenv("DHAN_CLIENT_ID")
+        self.access_token = access_token or os.getenv("DHAN_ACCESS_TOKEN")
+        self.expiry = expiry
+        self.session = session or requests.Session()
+
+    @staticmethod
+    def _display_expiry(expiry: str) -> str:
+        try:
+            return datetime.strptime(expiry, "%Y-%m-%d").strftime("%d-%b-%Y")
+        except ValueError:
+            return expiry
+
+    @staticmethod
+    def _normalize_side(side: Any) -> dict[str, Any]:
+        if not isinstance(side, dict):
+            side = {}
+
+        oi = side.get("oi", 0) or 0
+        previous_oi = side.get("previous_oi", 0) or 0
+
+        return {
+            "openInterest": oi,
+            "changeinOpenInterest": oi - previous_oi,
+            "totalTradedVolume": side.get("volume", 0) or 0,
+            "lastPrice": side.get("last_price", 0) or 0,
+        }
+
+    def fetch(self, symbol: str) -> dict[str, Any]:
+        clean_symbol = self.clean_symbol(symbol)
+        instrument = self.SYMBOLS.get(clean_symbol)
+
+        if instrument is None:
+            raise ValueError(
+                f"Dhan option chain does not support symbol: {clean_symbol}"
+            )
+
+        if not self.client_id or not self.access_token:
+            raise RuntimeError(
+                "DHAN_CLIENT_ID or DHAN_ACCESS_TOKEN is missing."
+            )
+
+        if not self.expiry:
+            raise RuntimeError("Dhan option-chain expiry is required.")
+
+        response = self.session.post(
+            self.OPTION_CHAIN_URL,
+            headers={
+                "access-token": self.access_token,
+                "client-id": self.client_id,
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+            },
+            json={
+                "UnderlyingScrip": instrument["security_id"],
+                "UnderlyingSeg": instrument["segment"],
+                "Expiry": self.expiry,
+            },
+            timeout=30,
+        )
+
+        payload = response.json()
+
+        if response.status_code != 200:
+            raise RuntimeError(
+                f"Dhan option-chain API error {response.status_code}: "
+                f"{payload}"
+            )
+
+        data = payload.get("data", {})
+        option_chain = data.get("oc", {})
+
+        if not isinstance(option_chain, dict):
+            option_chain = {}
+
+        display_expiry = self._display_expiry(self.expiry)
+        records: list[dict[str, Any]] = []
+
+        for strike, values in option_chain.items():
+            if not isinstance(values, dict):
+                continue
+
+            try:
+                strike_price = float(strike)
+            except (TypeError, ValueError):
+                continue
+
+            records.append(
+                {
+                    "strike_price": strike_price,
+                    "expiry_date": display_expiry,
+                    "ce": self._normalize_side(values.get("ce")),
+                    "pe": self._normalize_side(values.get("pe")),
+                }
+            )
+
+        records.sort(key=lambda row: row["strike_price"])
+
+        return {
+            "symbol": clean_symbol,
+            "records": records,
+            "nearest_expiry": display_expiry,
+            "underlying_value": data.get("last_price"),
+            "source": self.name,
+            "source_confidence": self.confidence,
+            "data_status": "LIVE" if records else "NO_DATA",
+        }
+
