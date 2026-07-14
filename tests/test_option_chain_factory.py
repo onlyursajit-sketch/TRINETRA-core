@@ -256,3 +256,27 @@ def test_factory_uses_placeholder_broker_without_dhan_environment() -> None:
         broker_wrapper.provider,
         BrokerOptionChainProvider,
     )
+
+
+def test_factory_uses_dhan_without_explicit_expiry(monkeypatch) -> None:
+    from src.providers.option_chain_factory import (
+        create_default_option_chain_manager,
+    )
+
+    monkeypatch.setenv("DHAN_CLIENT_ID", "test-client")
+    monkeypatch.setenv("DHAN_ACCESS_TOKEN", "test-token")
+    monkeypatch.delenv("DHAN_OPTION_EXPIRY", raising=False)
+
+    manager = create_default_option_chain_manager()
+
+    provider_names = [
+        getattr(
+            getattr(provider, "provider", None),
+            "name",
+            provider.name,
+        )
+        for provider in manager.providers
+    ]
+
+    assert "DHAN" in provider_names
+    assert "BROKER" not in provider_names

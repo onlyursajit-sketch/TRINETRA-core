@@ -50,7 +50,7 @@ def create_default_option_chain_manager(
         dhan_access_token = os.getenv("DHAN_ACCESS_TOKEN")
         dhan_expiry = os.getenv("DHAN_OPTION_EXPIRY")
 
-        if dhan_client_id and dhan_access_token and dhan_expiry:
+        if dhan_client_id and dhan_access_token:
             raw_broker_provider = DhanOptionChainProvider(
                 client_id=dhan_client_id,
                 access_token=dhan_access_token,
