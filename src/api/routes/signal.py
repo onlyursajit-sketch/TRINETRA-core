@@ -5,6 +5,7 @@ from dataclasses import asdict
 from fastapi import APIRouter, Query
 
 from src.intelligence.context_builder import ContextBuilder
+from src.api.live_context import build_live_context
 from src.intelligence.trade_signal_engine import TradeSignalEngine
 
 router = APIRouter(
@@ -20,6 +21,6 @@ engine = TradeSignalEngine()
 def signal(
     symbol: str = Query(default="NIFTY", min_length=1),
 ) -> dict:
-    context = builder.build(symbol=symbol)
+    context = build_live_context(builder, symbol)
     trade_signal = engine.generate(context)
     return asdict(trade_signal)

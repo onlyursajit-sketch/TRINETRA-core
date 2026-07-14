@@ -5,6 +5,7 @@ from dataclasses import asdict
 from fastapi import APIRouter, Query
 
 from src.intelligence.context_builder import ContextBuilder
+from src.api.live_context import build_live_context
 
 
 router = APIRouter(
@@ -19,5 +20,5 @@ builder = ContextBuilder()
 def market_context(
     symbol: str = Query(default="NIFTY", min_length=1),
 ) -> dict:
-    context = builder.build(symbol=symbol)
+    context = build_live_context(builder, symbol)
     return asdict(context)
