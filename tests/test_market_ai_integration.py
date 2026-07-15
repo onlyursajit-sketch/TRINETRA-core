@@ -114,3 +114,25 @@ class TestMarketAIIntegration(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
+
+
+def test_ai_decision_exposes_trade_quality_and_explanation() -> None:
+    engine = MarketEngine(
+        options_pipeline=FakeOptionsPipeline(),
+        snapshot_engine=FakeSnapshotEngine(),
+        report_generator=FakeMarketReportGenerator(),
+        global_command_center=FakeGlobalCommandCenter(),
+        global_report_generator=FakeGlobalReportGenerator(),
+    )
+
+    result = engine.build(
+        "NIFTY",
+        global_payloads={},
+    )
+
+    ai_decision = result["ai_decision"]
+
+    assert "trade_quality_score" in ai_decision
+    assert "explanation" in ai_decision
+    assert ai_decision["explanation"]["reasons"] == ai_decision["reasons"]
+    assert ai_decision["explanation"]["warnings"] == ai_decision["warnings"]
