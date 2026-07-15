@@ -41,6 +41,21 @@ class InstitutionalFlowAdapter:
             else "UNKNOWN"
         )
 
+        confidence_label = str(
+            payload.get("confidence") or ""
+        ).strip().upper()
+
+        confidence_map = {
+            "HIGH": 100.0,
+            "MEDIUM": 60.0,
+            "LOW": 30.0,
+        }
+
+        confidence = confidence_map.get(
+            confidence_label,
+            self._number(payload.get("source_confidence")),
+        )
+
         return InstitutionalFlow(
             fii_cash=fii_cash,
             dii_cash=dii_cash,
@@ -52,4 +67,5 @@ class InstitutionalFlowAdapter:
             ),
             fii_bias=fii_bias,
             dii_bias=dii_bias,
+            confidence=confidence,
         )
