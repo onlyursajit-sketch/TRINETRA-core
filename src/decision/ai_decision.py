@@ -396,6 +396,15 @@ class AIDecisionHub:
             )
         )
 
+        explanation = {
+            "summary": (
+                f"{decision} with {self._confidence_label(confidence_score)} "
+                f"confidence and {self._risk_label(risk_score)} risk."
+            ),
+            "reasons": list(reasons),
+            "warnings": list(warnings),
+        }
+
         return {
             "engine": "TRINETRA_AI_DECISION_HUB",
             "decision": decision,
@@ -418,6 +427,7 @@ class AIDecisionHub:
             ),
             "reasons": reasons,
             "warnings": warnings,
+            "explanation": explanation,
             "rule": (
                 "Decision support only. "
                 "No standalone prediction."

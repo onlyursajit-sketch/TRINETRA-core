@@ -266,3 +266,31 @@ def test_decision_includes_trade_quality_score() -> None:
 
     assert "trade_quality_score" in result
     assert 0.0 <= result["trade_quality_score"] <= 100.0
+
+
+def test_decision_includes_structured_explanation() -> None:
+    from src.decision.ai_decision import AIDecisionHub
+
+    snapshot = {
+        "source_confidence": 90,
+        "confidence": "HIGH",
+        "analytics_allowed": True,
+        "market_status": "LIVE",
+        "global": {
+            "source_confidence": 90,
+            "bias": "BULLISH",
+        },
+        "institutional": {
+            "market_bias": "BULLISH",
+        },
+        "vix": {
+            "risk_regime": "LOW",
+        },
+    }
+
+    result = AIDecisionHub().decide(snapshot)
+
+    assert "explanation" in result
+    assert result["explanation"]["summary"]
+    assert result["explanation"]["reasons"] == result["reasons"]
+    assert result["explanation"]["warnings"] == result["warnings"]
