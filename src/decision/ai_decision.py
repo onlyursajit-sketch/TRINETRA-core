@@ -382,6 +382,20 @@ class AIDecisionHub:
             else:
                 action = "WAIT"
 
+        trade_quality_score = (
+            0.0
+            if decision == "NO_TRADE"
+            else round(
+                self._clamp(
+                    (confidence_score * 0.70)
+                    + ((100.0 - risk_score) * 0.30),
+                    0.0,
+                    100.0,
+                ),
+                2,
+            )
+        )
+
         return {
             "engine": "TRINETRA_AI_DECISION_HUB",
             "decision": decision,
@@ -392,6 +406,7 @@ class AIDecisionHub:
                 confidence_score
             ),
             "risk_score": risk_score,
+            "trade_quality_score": trade_quality_score,
             "risk": self._risk_label(
                 risk_score
             ),
