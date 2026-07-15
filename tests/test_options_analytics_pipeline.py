@@ -295,3 +295,18 @@ class TestOptionsAnalyticsPipeline(
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
+
+
+def test_pipeline_includes_volume_and_strike_cluster_analysis() -> None:
+    pipeline = OptionsAnalyticsPipeline(
+        collector=FixtureCollector(),
+        cache=JSONCache(),
+    )
+
+    result = pipeline.run("NIFTY")
+
+    assert result["volume_analysis"] is not None
+    assert result["volume_analysis"]["analysed_records"] > 0
+
+    assert result["strike_clusters"] is not None
+    assert result["strike_clusters"]["cluster_count"] > 0

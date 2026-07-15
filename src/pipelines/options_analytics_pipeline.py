@@ -14,6 +14,14 @@ from src.engines.max_pain_engine import (
 )
 from src.engines.oi_engine import OIEngine, OIEngineError
 from src.engines.pcr_engine import PCREngine, PCREngineError
+from src.engines.volume_analysis_engine import (
+    VolumeAnalysisEngine,
+    VolumeAnalysisError,
+)
+from src.engines.strike_clustering_engine import (
+    StrikeClusteringEngine,
+    StrikeClusteringError,
+)
 
 
 class OptionsAnalyticsPipelineError(Exception):
@@ -39,6 +47,8 @@ class OptionsAnalyticsPipeline:
         "oi": 300,
         "pcr": 300,
         "max_pain": 300,
+        "volume_analysis": 300,
+        "strike_clusters": 300,
         "snapshot": 300,
     }
 
@@ -49,6 +59,8 @@ class OptionsAnalyticsPipeline:
         pcr_engine: PCREngine | None = None,
         max_pain_engine: MaxPainEngine | None = None,
         cache: JSONCache | None = None,
+        volume_analysis_engine: VolumeAnalysisEngine | None = None,
+        strike_clustering_engine: StrikeClusteringEngine | None = None,
     ) -> None:
         self.collector = (
             collector
@@ -59,6 +71,12 @@ class OptionsAnalyticsPipeline:
         self.oi_engine = oi_engine or OIEngine()
         self.pcr_engine = pcr_engine or PCREngine()
         self.max_pain_engine = max_pain_engine or MaxPainEngine()
+        self.volume_analysis_engine = (
+            volume_analysis_engine or VolumeAnalysisEngine()
+        )
+        self.strike_clustering_engine = (
+            strike_clustering_engine or StrikeClusteringEngine()
+        )
         self.cache = cache or JSONCache()
 
     @staticmethod
@@ -118,6 +136,8 @@ class OptionsAnalyticsPipeline:
                 "oi": None,
                 "pcr": None,
                 "max_pain": None,
+                "volume_analysis": None,
+                "strike_clusters": None,
                 "analytics_allowed": False,
                 "errors": [
                     option_chain.get(
@@ -130,6 +150,8 @@ class OptionsAnalyticsPipeline:
                     "oi": None,
                     "pcr": None,
                     "max_pain": None,
+                    "volume_analysis": None,
+                    "strike_clusters": None,
                     "snapshot": None,
                 },
             }
@@ -148,10 +170,14 @@ class OptionsAnalyticsPipeline:
         oi_result: dict[str, Any] | None = None
         pcr_result: dict[str, Any] | None = None
         max_pain_result: dict[str, Any] | None = None
+        volume_analysis_result: dict[str, Any] | None = None
+        strike_clusters_result: dict[str, Any] | None = None
 
         oi_cache_path: str | None = None
         pcr_cache_path: str | None = None
         max_pain_cache_path: str | None = None
+        volume_analysis_cache_path: str | None = None
+        strike_clusters_cache_path: str | None = None
 
         try:
             oi_result = self.oi_engine.analyse(
@@ -198,10 +224,36 @@ class OptionsAnalyticsPipeline:
         except MaxPainEngineError as exc:
             errors.append(f"MAX_PAIN_ENGINE: {exc}")
 
+        try:
+            volume_analysis_result = self.volume_analysis_engine.analyse(
+                option_chain,
+            )
+            volume_analysis_cache_path = self._write_cache(
+                "volume_analysis",
+                cache_key,
+                volume_analysis_result,
+            )
+        except VolumeAnalysisError as exc:
+            errors.append(f"VOLUME_ANALYSIS_ENGINE: {exc}")
+
+        try:
+            strike_clusters_result = self.strike_clustering_engine.analyse(
+                option_chain,
+            )
+            strike_clusters_cache_path = self._write_cache(
+                "strike_clusters",
+                cache_key,
+                strike_clusters_result,
+            )
+        except StrikeClusteringError as exc:
+            errors.append(f"STRIKE_CLUSTERING_ENGINE: {exc}")
+
         analytics_allowed = (
             oi_result is not None
             and pcr_result is not None
             and max_pain_result is not None
+            and volume_analysis_result is not None
+            and strike_clusters_result is not None
         )
 
         pipeline_status = (
@@ -220,6 +272,8 @@ class OptionsAnalyticsPipeline:
             "oi": oi_result,
             "pcr": pcr_result,
             "max_pain": max_pain_result,
+            "volume_analysis": volume_analysis_result,
+            "strike_clusters": strike_clusters_result,
             "analytics_allowed": analytics_allowed,
             "errors": errors,
             "cache_paths": {
@@ -227,6 +281,8 @@ class OptionsAnalyticsPipeline:
                 "oi": oi_cache_path,
                 "pcr": pcr_cache_path,
                 "max_pain": max_pain_cache_path,
+                "volume_analysis": volume_analysis_cache_path,
+                "strike_clusters": strike_clusters_cache_path,
                 "snapshot": None,
             },
         }
