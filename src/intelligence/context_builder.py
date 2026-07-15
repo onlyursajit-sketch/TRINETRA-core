@@ -44,6 +44,8 @@ class ContextBuilder:
         if institutional_flow is not None:
             context.fii_cash = institutional_flow.fii_cash
             context.dii_cash = institutional_flow.dii_cash
+            context.fii_index_futures = institutional_flow.fii_index_futures
+            context.fii_stock_futures = institutional_flow.fii_stock_futures
             context.fii_bias = institutional_flow.fii_bias
             context.dii_bias = institutional_flow.dii_bias
             context.institutional_confidence = institutional_flow.confidence

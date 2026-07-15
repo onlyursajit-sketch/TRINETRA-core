@@ -64,3 +64,26 @@ def test_context_builder_applies_institutional_flow() -> None:
     assert context.dii_bias == "SHORT"
     assert context.institutional_confidence == 65.0
     assert context.confidence == 65.0
+
+
+def test_context_builder_preserves_institutional_derivatives_flow() -> None:
+    from src.intelligence.context_builder import ContextBuilder
+    from src.intelligence.institutional_flow import InstitutionalFlow
+
+    flow = InstitutionalFlow(
+        fii_cash=-1300.0,
+        dii_cash=1600.0,
+        fii_index_futures=-750.0,
+        fii_stock_futures=420.0,
+        fii_bias="SHORT",
+        dii_bias="LONG",
+        confidence=65.0,
+    )
+
+    context = ContextBuilder().build(
+        symbol="NIFTY",
+        institutional_flow=flow,
+    )
+
+    assert context.fii_index_futures == -750.0
+    assert context.fii_stock_futures == 420.0
