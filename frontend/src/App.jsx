@@ -133,7 +133,15 @@ function App() {
 
       {error && (
         <section className="error-box">
-          API Error: {error}
+          <strong>Dashboard data unavailable</strong>
+          <p>{error}</p>
+          <button
+            type="button"
+            onClick={() => setRefreshKey((value) => value + 1)}
+            disabled={loading}
+          >
+            {loading ? "Retrying..." : "Retry"}
+          </button>
         </section>
       )}
 

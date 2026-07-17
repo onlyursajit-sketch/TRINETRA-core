@@ -245,3 +245,24 @@ select {
     justify-content: center;
   }
 }
+
+.error-box strong {
+  display: block;
+  margin-bottom: 6px;
+}
+
+.error-box p {
+  margin: 0 0 12px;
+}
+
+.error-box button {
+  padding: 9px 14px;
+  border: 1px solid #8a3d3d;
+  border-radius: 10px;
+  background: #121a2d;
+  color: #f4f7fb;
+}
+
+.error-box button:disabled {
+  opacity: 0.6;
+}
