@@ -142,6 +142,32 @@ function App() {
         </article>
 
         <article className="card">
+          <h2>Option Chain Intelligence</h2>
+          <p>PCR: {context?.pcr ?? "N/A"}</p>
+          <p>Max Pain: {context?.max_pain ?? "N/A"}</p>
+          <p>
+            OI Bias:{" "}
+            {!context
+              ? "Loading..."
+              : context.pcr == null && context.max_pain == null
+                ? "NO DATA"
+                : context.oi_bullish
+                  ? "BULLISH"
+                  : "BEARISH / NEUTRAL"}
+          </p>
+          <p>
+            Volume Bias:{" "}
+            {!context
+              ? "Loading..."
+              : context.pcr == null && context.max_pain == null
+                ? "NO DATA"
+                : context.volume_bullish
+                  ? "BULLISH"
+                  : "BEARISH / NEUTRAL"}
+          </p>
+        </article>
+
+        <article className="card">
           <h2>Institutional Flow</h2>
           <p>
             FII Cash: {context?.fii_cash ?? "Loading..."}
