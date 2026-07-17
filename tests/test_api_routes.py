@@ -486,3 +486,19 @@ def test_root_and_health_versions_match() -> None:
     assert root_response.status_code == 200
     assert health_response.status_code == 200
     assert root_response.json()["version"] == health_response.json()["version"]
+
+
+def test_cors_allows_vite_frontend_origin() -> None:
+    response = client.options(
+        "/api/v1/market/context",
+        headers={
+            "Origin": "http://localhost:5173",
+            "Access-Control-Request-Method": "GET",
+        },
+    )
+
+    assert response.status_code == 200
+    assert (
+        response.headers["access-control-allow-origin"]
+        == "http://localhost:5173"
+    )
