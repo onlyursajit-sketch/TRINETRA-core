@@ -16,6 +16,19 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
   const [lastUpdated, setLastUpdated] = useState(null);
+  const [autoRefresh, setAutoRefresh] = useState(false);
+
+  useEffect(() => {
+    if (!autoRefresh) {
+      return undefined;
+    }
+
+    const timer = setInterval(() => {
+      setRefreshKey((value) => value + 1);
+    }, 30000);
+
+    return () => clearInterval(timer);
+  }, [autoRefresh]);
 
   useEffect(() => {
     async function loadDashboard() {
@@ -86,6 +99,13 @@ function App() {
             disabled={loading}
           >
             {loading ? "Refreshing..." : "Refresh"}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setAutoRefresh((value) => !value)}
+          >
+            Auto Refresh: {autoRefresh ? "ON" : "OFF"}
           </button>
 
           <span className="updated-at">
