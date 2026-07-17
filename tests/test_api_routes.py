@@ -439,3 +439,41 @@ def test_versioned_market_context_endpoint() -> None:
 
     assert response.status_code == 200
     assert response.json()["symbol"] == "BANKNIFTY"
+
+
+def test_versioned_market_decision_requires_api_key(monkeypatch) -> None:
+    monkeypatch.setenv("TRINETRA_API_KEY", "secret-key")
+
+    response = client.get(
+        "/api/v1/market/decision",
+        params={"symbol": "NIFTY"},
+    )
+
+    assert response.status_code == 401
+
+
+def test_versioned_signal_requires_api_key(monkeypatch) -> None:
+    monkeypatch.setenv("TRINETRA_API_KEY", "secret-key")
+
+    response = client.get(
+        "/api/v1/signal",
+        params={"symbol": "NIFTY"},
+    )
+
+    assert response.status_code == 401
+
+
+def test_versioned_trade_plan_requires_api_key(monkeypatch) -> None:
+    monkeypatch.setenv("TRINETRA_API_KEY", "secret-key")
+
+    response = client.post(
+        "/api/v1/trade/plan",
+        json={
+            "capital": 100000,
+            "entry": 100,
+            "stop_loss": 95,
+            "target": 110,
+        },
+    )
+
+    assert response.status_code == 401
