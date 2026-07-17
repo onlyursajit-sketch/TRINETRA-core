@@ -17,7 +17,10 @@ function App() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
-  const [lastUpdated, setLastUpdated] = useState(null);
+  const [lastUpdated, setLastUpdated] = useState(() => {
+    const saved = localStorage.getItem("trinetra:lastUpdated");
+    return saved ? new Date(saved) : null;
+  });
   const [autoRefresh, setAutoRefresh] = useState(() => {
     return localStorage.getItem("trinetra:autoRefresh") === "true";
   });
@@ -61,7 +64,12 @@ function App() {
         setContext(contextData);
         setDecision(decisionData);
         setProviders(providerData);
-        setLastUpdated(new Date());
+        const updatedAt = new Date();
+      setLastUpdated(updatedAt);
+      localStorage.setItem(
+        "trinetra:lastUpdated",
+        updatedAt.toISOString()
+      );
         setLoading(false);
       } catch (err) {
         setError(err.message);
@@ -135,6 +143,14 @@ function App() {
         <section className="error-box">
           <strong>Dashboard data unavailable</strong>
           <p>{error}</p>
+
+          {lastUpdated && (
+            <p className="stale-warning">
+              Showing last successful data from{" "}
+              {lastUpdated.toLocaleTimeString()}.
+            </p>
+          )}
+
           <button
             type="button"
             onClick={() => setRefreshKey((value) => value + 1)}

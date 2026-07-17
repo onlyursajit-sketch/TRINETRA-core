@@ -266,3 +266,8 @@ select {
 .error-box button:disabled {
   opacity: 0.6;
 }
+
+.stale-warning {
+  color: #d8b46a;
+  font-size: 13px;
+}
