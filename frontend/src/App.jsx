@@ -169,11 +169,17 @@ function App() {
 
         <article className="card">
           <h2>Institutional Flow</h2>
+          <p>FII Bias: {context?.fii_bias ?? "Loading..."}</p>
+          <p>DII Bias: {context?.dii_bias ?? "Loading..."}</p>
+          <p>FII Cash: {context?.fii_cash ?? "Loading..."}</p>
+          <p>DII Cash: {context?.dii_cash ?? "Loading..."}</p>
           <p>
-            FII Cash: {context?.fii_cash ?? "Loading..."}
+            Index Futures:{" "}
+            {context?.fii_index_futures ?? "Loading..."}
           </p>
           <p>
-            DII Cash: {context?.dii_cash ?? "Loading..."}
+            Stock Futures:{" "}
+            {context?.fii_stock_futures ?? "Loading..."}
           </p>
           <p>
             Confidence:{" "}
