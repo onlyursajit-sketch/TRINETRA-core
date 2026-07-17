@@ -114,3 +114,29 @@ select {
 .provider-badge.unavailable {
   border: 1px solid #7a3d3d;
 }
+
+.dashboard-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.dashboard-controls button {
+  padding: 10px 14px;
+  border: 1px solid #3f4d68;
+  border-radius: 10px;
+  background: #121a2d;
+  color: #f4f7fb;
+  cursor: pointer;
+}
+
+.dashboard-controls button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.updated-at {
+  font-size: 12px;
+  color: #9aa7bd;
+}

@@ -14,6 +14,8 @@ function App() {
   const [providers, setProviders] = useState(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [lastUpdated, setLastUpdated] = useState(null);
 
   useEffect(() => {
     async function loadDashboard() {
@@ -31,6 +33,7 @@ function App() {
         setContext(contextData);
         setDecision(decisionData);
         setProviders(providerData);
+        setLastUpdated(new Date());
         setLoading(false);
       } catch (err) {
         setError(err.message);
@@ -49,13 +52,29 @@ function App() {
           <h1>Market Intelligence Dashboard</h1>
         </div>
 
-        <select
-          value={symbol}
-          onChange={(event) => setSymbol(event.target.value)}
-        >
-          <option value="NIFTY">NIFTY</option>
-          <option value="BANKNIFTY">BANKNIFTY</option>
-        </select>
+        <div className="dashboard-controls">
+          <select
+            value={symbol}
+            onChange={(event) => setSymbol(event.target.value)}
+          >
+            <option value="NIFTY">NIFTY</option>
+            <option value="BANKNIFTY">BANKNIFTY</option>
+          </select>
+
+          <button
+            type="button"
+            onClick={() => setRefreshKey((value) => value + 1)}
+            disabled={loading}
+          >
+            {loading ? "Refreshing..." : "Refresh"}
+          </button>
+
+          <span className="updated-at">
+            {lastUpdated
+              ? `Updated ${lastUpdated.toLocaleTimeString()}`
+              : "Not updated yet"}
+          </span>
+        </div>
       </header>
 
       {error && (
