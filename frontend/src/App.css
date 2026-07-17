@@ -79,3 +79,38 @@ select {
   border-radius: 12px;
   background: #2a1515;
 }
+
+.status-online {
+  border-color: #2f6f4e;
+}
+
+.status-loading {
+  opacity: 0.7;
+}
+
+.provider-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.provider-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.provider-badge {
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+}
+
+.provider-badge.available {
+  border: 1px solid #2f6f4e;
+}
+
+.provider-badge.unavailable {
+  border: 1px solid #7a3d3d;
+}

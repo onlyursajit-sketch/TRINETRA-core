@@ -13,11 +13,13 @@ function App() {
   const [decision, setDecision] = useState(null);
   const [providers, setProviders] = useState(null);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function loadDashboard() {
       try {
         setError("");
+        setLoading(true);
 
         const [contextData, decisionData, providerData] =
           await Promise.all([
@@ -29,8 +31,10 @@ function App() {
         setContext(contextData);
         setDecision(decisionData);
         setProviders(providerData);
+        setLoading(false);
       } catch (err) {
         setError(err.message);
+        setLoading(false);
       }
     }
 
@@ -68,7 +72,7 @@ function App() {
             Confidence: {context?.confidence ?? "Loading..."}
           </p>
           <p>
-            Regime: {context?.market_regime ?? "Loading..."}
+            Regime: {context?.regime ?? "Loading..."}
           </p>
         </article>
 
@@ -92,17 +96,34 @@ function App() {
 
         <article className="card">
           <h2>Provider Health</h2>
+
           <p>
-            Providers:{" "}
+            Status:{" "}
+            {providers?.summary?.status ?? "Loading..."}
+          </p>
+
+          <div className="provider-list">
             {providers?.providers
-              ? Object.keys(providers.providers).length
+              ? Object.entries(providers.providers).map(
+                  ([name, health]) => (
+                    <div className="provider-row" key={name}>
+                      <span>{name}</span>
+                      <span
+                        className={
+                          health.available
+                            ? "provider-badge available"
+                            : "provider-badge unavailable"
+                        }
+                      >
+                        {health.available
+                          ? "AVAILABLE"
+                          : "UNAVAILABLE"}
+                      </span>
+                    </div>
+                  )
+                )
               : "Loading..."}
-          </p>
-          <p>
-            Healthy:{" "}
-            {providers?.summary?.healthy_providers ??
-              "Loading..."}
-          </p>
+          </div>
         </article>
 
         <article className="card">
