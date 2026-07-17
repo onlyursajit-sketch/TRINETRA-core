@@ -50,6 +50,25 @@ function App() {
         <div>
           <p className="eyebrow">TRINETRA</p>
           <h1>Market Intelligence Dashboard</h1>
+
+          <span
+            className={`status ${
+              loading
+                ? "status-loading"
+                : providers?.summary?.status === "HEALTHY"
+                  ? "status-online"
+                  : "status-warning"
+            }`}
+          >
+            {loading
+              ? "LOADING DATA"
+              : providers?.summary?.status === "HEALTHY" &&
+                  decision?.market_status !== "NO_DATA"
+                ? "SYSTEM HEALTHY"
+                : providers?.summary?.status === "HEALTHY"
+                  ? "SYSTEM ONLINE · MARKET DATA LIMITED"
+                  : "SYSTEM DEGRADED"}
+          </span>
         </div>
 
         <div className="dashboard-controls">
