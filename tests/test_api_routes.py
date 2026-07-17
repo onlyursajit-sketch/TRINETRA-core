@@ -477,3 +477,12 @@ def test_versioned_trade_plan_requires_api_key(monkeypatch) -> None:
     )
 
     assert response.status_code == 401
+
+
+def test_root_and_health_versions_match() -> None:
+    root_response = client.get("/")
+    health_response = client.get("/health")
+
+    assert root_response.status_code == 200
+    assert health_response.status_code == 200
+    assert root_response.json()["version"] == health_response.json()["version"]

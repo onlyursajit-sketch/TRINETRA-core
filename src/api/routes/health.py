@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from fastapi import APIRouter
+from src.api.version import API_VERSION
 
 router = APIRouter(
     prefix="/health",
@@ -13,5 +14,5 @@ def health() -> dict[str, str]:
     return {
         "status": "healthy",
         "service": "TRINETRA",
-        "version": "1.0.0",
+        "version": API_VERSION,
     }

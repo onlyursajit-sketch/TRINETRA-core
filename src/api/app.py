@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from fastapi import FastAPI
 from dotenv import load_dotenv
+from src.api.version import API_VERSION
 
 load_dotenv()
 
@@ -12,7 +13,7 @@ from src.api.routes.trade import router as trade_router
 
 app = FastAPI(
     title="TRINETRA API",
-    version="1.0.0",
+    version=API_VERSION,
     description="TRINETRA market intelligence API",
 )
 
@@ -32,5 +33,5 @@ def root() -> dict[str, str]:
     return {
         "name": "TRINETRA",
         "status": "running",
-        "version": "1.0.0",
+        "version": API_VERSION,
     }
