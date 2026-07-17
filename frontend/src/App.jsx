@@ -93,6 +93,13 @@ function App() {
           <p>
             Regime: {context?.regime ?? "Loading..."}
           </p>
+          <p>
+            VIX: {context?.vix ?? "N/A"}
+          </p>
+          <p>
+            Market Status:{" "}
+            {decision?.market_status ?? "Loading..."}
+          </p>
         </article>
 
         <article className="card">
