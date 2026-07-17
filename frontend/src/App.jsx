@@ -92,6 +92,21 @@ function App() {
             Quality:{" "}
             {decision?.trade_quality_score ?? "Loading..."}
           </p>
+
+          {decision?.explanation?.summary && (
+            <div className="explanation-box">
+              <strong>Explanation</strong>
+              <p>{decision.explanation.summary}</p>
+
+              {decision.explanation.reasons?.length > 0 && (
+                <ul>
+                  {decision.explanation.reasons.map((reason) => (
+                    <li key={reason}>{reason}</li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
         </article>
 
         <article className="card">
