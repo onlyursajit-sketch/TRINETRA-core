@@ -2,9 +2,10 @@ from __future__ import annotations
 
 from dataclasses import asdict
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
 
+from src.api.auth import require_api_key
 from src.intelligence.risk_config import RiskConfig
 from src.intelligence.trade_plan_engine import TradePlanEngine
 
@@ -26,7 +27,10 @@ class TradePlanRequest(BaseModel):
 
 
 @router.post("/plan")
-def create_trade_plan(payload: TradePlanRequest) -> dict:
+def create_trade_plan(
+    payload: TradePlanRequest,
+    _: None = Depends(require_api_key),
+) -> dict:
     config = RiskConfig(
         capital=payload.capital,
         risk_per_trade_pct=payload.risk_per_trade_pct,

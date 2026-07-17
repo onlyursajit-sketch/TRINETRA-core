@@ -2,10 +2,11 @@ from __future__ import annotations
 
 from dataclasses import asdict
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Depends, Query
 
 from src.intelligence.context_builder import ContextBuilder
 from src.api.live_context import build_live_context
+from src.api.auth import require_api_key
 from src.intelligence.trade_signal_engine import TradeSignalEngine
 
 router = APIRouter(
@@ -20,6 +21,7 @@ engine = TradeSignalEngine()
 @router.get("")
 def signal(
     symbol: str = Query(default="NIFTY", min_length=1),
+    _: None = Depends(require_api_key),
 ) -> dict:
     context = build_live_context(builder, symbol)
     trade_signal = engine.generate(context)

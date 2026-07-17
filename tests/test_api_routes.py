@@ -340,3 +340,47 @@ def test_market_decision_accepts_valid_api_key(monkeypatch) -> None:
 
     assert response.status_code == 200
     assert response.json()["decision"] == "WAIT"
+
+
+def test_signal_requires_api_key(monkeypatch) -> None:
+    monkeypatch.setenv("TRINETRA_API_KEY", "secret-key")
+
+    response = client.get(
+        "/signal",
+        params={"symbol": "NIFTY"},
+    )
+
+    assert response.status_code == 401
+
+
+def test_trade_plan_requires_api_key(monkeypatch) -> None:
+    monkeypatch.setenv("TRINETRA_API_KEY", "secret-key")
+
+    response = client.post(
+        "/trade/plan",
+        json={
+            "capital": 100000,
+            "entry": 100,
+            "stop_loss": 95,
+            "target": 110,
+        },
+    )
+
+    assert response.status_code == 401
+
+
+def test_trade_plan_accepts_valid_api_key(monkeypatch) -> None:
+    monkeypatch.setenv("TRINETRA_API_KEY", "secret-key")
+
+    response = client.post(
+        "/trade/plan",
+        headers={"X-API-Key": "secret-key"},
+        json={
+            "capital": 100000,
+            "entry": 100,
+            "stop_loss": 95,
+            "target": 110,
+        },
+    )
+
+    assert response.status_code == 200
