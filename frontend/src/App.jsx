@@ -16,7 +16,16 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
   const [lastUpdated, setLastUpdated] = useState(null);
-  const [autoRefresh, setAutoRefresh] = useState(false);
+  const [autoRefresh, setAutoRefresh] = useState(() => {
+    return localStorage.getItem("trinetra:autoRefresh") === "true";
+  });
+
+  useEffect(() => {
+    localStorage.setItem(
+      "trinetra:autoRefresh",
+      String(autoRefresh)
+    );
+  }, [autoRefresh]);
 
   useEffect(() => {
     if (!autoRefresh) {
