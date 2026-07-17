@@ -384,3 +384,40 @@ def test_trade_plan_accepts_valid_api_key(monkeypatch) -> None:
     )
 
     assert response.status_code == 200
+
+
+def test_openapi_exposes_api_key_security_scheme() -> None:
+    schema = client.get("/openapi.json").json()
+
+    security_schemes = (
+        schema
+        .get("components", {})
+        .get("securitySchemes", {})
+    )
+
+    assert security_schemes
+
+    api_key_schemes = [
+        value
+        for value in security_schemes.values()
+        if value.get("type") == "apiKey"
+        and value.get("name") == "X-API-Key"
+        and value.get("in") == "header"
+    ]
+
+    assert api_key_schemes
+
+
+def test_protected_routes_are_marked_secure_in_openapi() -> None:
+    schema = client.get("/openapi.json").json()
+
+    protected_operations = [
+        schema["paths"]["/market/decision"]["get"],
+        schema["paths"]["/signal/"]["get"]
+        if "/signal/" in schema["paths"]
+        else schema["paths"]["/signal"]["get"],
+        schema["paths"]["/trade/plan"]["post"],
+    ]
+
+    for operation in protected_operations:
+        assert operation.get("security")

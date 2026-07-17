@@ -2,11 +2,18 @@ from __future__ import annotations
 
 import os
 
-from fastapi import Header, HTTPException
+from fastapi import HTTPException, Security
+from fastapi.security import APIKeyHeader
+
+
+api_key_header = APIKeyHeader(
+    name="X-API-Key",
+    auto_error=False,
+)
 
 
 def require_api_key(
-    x_api_key: str | None = Header(default=None),
+    x_api_key: str | None = Security(api_key_header),
 ) -> None:
     expected = os.getenv("TRINETRA_API_KEY")
 
