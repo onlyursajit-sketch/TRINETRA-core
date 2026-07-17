@@ -42,6 +42,14 @@ def market_decision(
 ) -> dict:
     return build_market_decision(symbol)
 
+@router.get("/option-chain")
+def market_option_chain(
+    symbol: str = Query(default="NIFTY", min_length=1),
+) -> dict:
+    clean_symbol = symbol.strip().upper()
+    return provider_manager.fetch(clean_symbol)
+
+
 @router.get("/providers/health")
 def provider_health() -> dict:
     return {

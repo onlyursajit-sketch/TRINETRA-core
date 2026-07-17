@@ -502,3 +502,44 @@ def test_cors_allows_vite_frontend_origin() -> None:
         response.headers["access-control-allow-origin"]
         == "http://localhost:5173"
     )
+
+
+def test_market_option_chain_endpoint(monkeypatch) -> None:
+    from fastapi.testclient import TestClient
+    from src.api.app import app
+    from src.api.routes import market
+
+    monkeypatch.setattr(
+        market.provider_manager,
+        "fetch",
+        lambda symbol: {
+            "symbol": symbol,
+            "records": [
+                {
+                    "strikePrice": 25000,
+                    "CE": {"openInterest": 100},
+                    "PE": {"openInterest": 120},
+                }
+            ],
+            "source": "TEST",
+            "data_status": "LIVE",
+            "manager_status": "SUCCESS",
+            "provider_used": "TEST",
+            "fallback_used": False,
+            "provider_errors": [],
+        },
+    )
+
+    response = TestClient(app).get(
+        "/api/v1/market/option-chain",
+        params={"symbol": "nifty"},
+    )
+
+    assert response.status_code == 200
+
+    payload = response.json()
+
+    assert payload["symbol"] == "NIFTY"
+    assert payload["data_status"] == "LIVE"
+    assert payload["provider_used"] == "TEST"
+    assert len(payload["records"]) == 1
