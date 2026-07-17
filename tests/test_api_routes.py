@@ -170,3 +170,87 @@ def test_provider_health_endpoint() -> None:
     assert payload["summary"]["providers_available"] == 1
     assert payload["providers"]["NSE"]["available"] is True
     assert payload["providers"]["DHAN"]["failure_count"] == 2
+
+
+def test_market_decision_endpoint() -> None:
+    fake_decision = {
+        "engine": "TRINETRA_AI_DECISION_HUB",
+        "decision": "BUY_BIAS",
+        "action": "WAIT_FOR_LONG_CONFIRMATION",
+        "score": 75.0,
+        "confidence_score": 80.0,
+        "confidence": "HIGH",
+        "risk_score": 20.0,
+        "trade_quality_score": 82.0,
+        "risk": "LOW",
+        "reasons": ["Bullish alignment"],
+        "warnings": [],
+        "explanation": {
+            "summary": "BUY_BIAS with HIGH confidence and LOW risk.",
+            "reasons": ["Bullish alignment"],
+            "warnings": [],
+        },
+    }
+
+    with patch.object(
+        market_route,
+        "build_market_decision",
+        return_value=fake_decision,
+        create=True,
+    ):
+        response = client.get(
+            "/market/decision",
+            params={"symbol": "NIFTY"},
+        )
+
+    assert response.status_code == 200
+
+    payload = response.json()
+
+    assert payload["decision"] == "BUY_BIAS"
+    assert payload["confidence_score"] == 80.0
+    assert payload["risk_score"] == 20.0
+    assert payload["trade_quality_score"] == 82.0
+    assert payload["explanation"]["summary"]
+
+
+def test_market_decision_endpoint() -> None:
+    fake_decision = {
+        "engine": "TRINETRA_AI_DECISION_HUB",
+        "decision": "BUY_BIAS",
+        "action": "WAIT_FOR_LONG_CONFIRMATION",
+        "score": 75.0,
+        "confidence_score": 80.0,
+        "confidence": "HIGH",
+        "risk_score": 20.0,
+        "trade_quality_score": 82.0,
+        "risk": "LOW",
+        "reasons": ["Bullish alignment"],
+        "warnings": [],
+        "explanation": {
+            "summary": "BUY_BIAS with HIGH confidence and LOW risk.",
+            "reasons": ["Bullish alignment"],
+            "warnings": [],
+        },
+    }
+
+    with patch.object(
+        market_route,
+        "build_market_decision",
+        return_value=fake_decision,
+        create=True,
+    ):
+        response = client.get(
+            "/market/decision",
+            params={"symbol": "NIFTY"},
+        )
+
+    assert response.status_code == 200
+
+    payload = response.json()
+
+    assert payload["decision"] == "BUY_BIAS"
+    assert payload["confidence_score"] == 80.0
+    assert payload["risk_score"] == 20.0
+    assert payload["trade_quality_score"] == 82.0
+    assert payload["explanation"]["summary"]

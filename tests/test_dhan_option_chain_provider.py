@@ -37,7 +37,7 @@ def test_dhan_provider_normalizes_option_chain() -> None:
     provider = DhanOptionChainProvider(
         client_id="demo-client",
         access_token="demo-token",
-        expiry="2026-07-16",
+        expiry="2099-07-16",
         session=session,
     )
 
@@ -47,12 +47,12 @@ def test_dhan_provider_normalizes_option_chain() -> None:
     assert result["source"] == "DHAN"
     assert result["data_status"] == "LIVE"
     assert result["underlying_value"] == 25010.5
-    assert result["nearest_expiry"] == "16-Jul-2026"
+    assert result["nearest_expiry"] == "16-Jul-2099"
 
     assert result["records"] == [
         {
             "strike_price": 25000.0,
-            "expiry_date": "16-Jul-2026",
+            "expiry_date": "16-Jul-2099",
             "ce": {
                 "openInterest": 1200,
                 "changeinOpenInterest": 200,
@@ -77,8 +77,8 @@ def test_dhan_provider_auto_resolves_nearest_expiry() -> None:
     expiry_response.json.return_value = {
         "status": "success",
         "data": [
-            "2026-07-16",
-            "2026-07-23",
+            "2099-07-16",
+            "2099-07-23",
         ],
     }
 
@@ -122,7 +122,7 @@ def test_dhan_provider_auto_resolves_nearest_expiry() -> None:
 
     result = provider.fetch("NIFTY")
 
-    assert result["nearest_expiry"] == "16-Jul-2026"
+    assert result["nearest_expiry"] == "16-Jul-2099"
     assert result["data_status"] == "LIVE"
     assert len(result["records"]) == 1
 
@@ -136,7 +136,7 @@ def test_dhan_provider_auto_resolves_nearest_expiry() -> None:
         "UnderlyingSeg": "IDX_I",
     }
 
-    assert chain_call.kwargs["json"]["Expiry"] == "2026-07-16"
+    assert chain_call.kwargs["json"]["Expiry"] == "2099-07-16"
 
 
 def test_dhan_provider_auto_resolves_nearest_expiry() -> None:
@@ -145,8 +145,8 @@ def test_dhan_provider_auto_resolves_nearest_expiry() -> None:
     expiry_response.json.return_value = {
         "status": "success",
         "data": [
-            "2026-07-16",
-            "2026-07-23",
+            "2099-07-16",
+            "2099-07-23",
         ],
     }
 
@@ -190,7 +190,7 @@ def test_dhan_provider_auto_resolves_nearest_expiry() -> None:
 
     result = provider.fetch("NIFTY")
 
-    assert result["nearest_expiry"] == "16-Jul-2026"
+    assert result["nearest_expiry"] == "16-Jul-2099"
     assert result["data_status"] == "LIVE"
     assert len(result["records"]) == 1
 
@@ -204,7 +204,7 @@ def test_dhan_provider_auto_resolves_nearest_expiry() -> None:
         "UnderlyingSeg": "IDX_I",
     }
 
-    assert chain_call.kwargs["json"]["Expiry"] == "2026-07-16"
+    assert chain_call.kwargs["json"]["Expiry"] == "2099-07-16"
 
 
 def test_dhan_provider_ignores_expired_dates_when_resolving_expiry() -> None:
@@ -216,8 +216,8 @@ def test_dhan_provider_ignores_expired_dates_when_resolving_expiry() -> None:
         "status": "success",
         "data": [
             "2026-07-09",
-            "2026-07-16",
-            "2026-07-23",
+            "2099-07-16",
+            "2099-07-23",
         ],
     }
 
@@ -261,4 +261,4 @@ def test_dhan_provider_ignores_expired_dates_when_resolving_expiry() -> None:
 
     chain_call = session.post.call_args_list[1]
 
-    assert chain_call.kwargs["json"]["Expiry"] == "2026-07-16"
+    assert chain_call.kwargs["json"]["Expiry"] == "2099-07-16"

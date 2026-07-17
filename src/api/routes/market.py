@@ -6,6 +6,7 @@ from fastapi import APIRouter, Query
 
 from src.intelligence.context_builder import ContextBuilder
 from src.api.live_context import build_live_context
+from src.decision.ai_decision import AIDecisionHub
 from src.providers.option_chain_factory import create_default_option_chain_manager
 
 
@@ -24,6 +25,19 @@ def market_context(
 ) -> dict:
     context = build_live_context(builder, symbol)
     return asdict(context)
+
+
+def build_market_decision(symbol: str) -> dict:
+    context = build_live_context(builder, symbol)
+    snapshot = asdict(context)
+    return AIDecisionHub().decide(snapshot)
+
+
+@router.get("/decision")
+def market_decision(
+    symbol: str = Query(default="NIFTY", min_length=1),
+) -> dict:
+    return build_market_decision(symbol)
 
 @router.get("/providers/health")
 def provider_health() -> dict:
