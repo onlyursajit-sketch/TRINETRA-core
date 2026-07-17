@@ -421,3 +421,21 @@ def test_protected_routes_are_marked_secure_in_openapi() -> None:
 
     for operation in protected_operations:
         assert operation.get("security")
+
+
+def test_versioned_health_endpoint() -> None:
+    response = client.get("/api/v1/health")
+
+    assert response.status_code == 200
+    assert response.json()["service"] == "TRINETRA"
+
+
+def test_versioned_market_context_endpoint() -> None:
+    with patch.object(market_route, "builder", FakeBuilder()):
+        response = client.get(
+            "/api/v1/market/context",
+            params={"symbol": "BANKNIFTY"},
+        )
+
+    assert response.status_code == 200
+    assert response.json()["symbol"] == "BANKNIFTY"

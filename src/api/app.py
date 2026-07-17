@@ -21,6 +21,11 @@ app.include_router(market_router)
 app.include_router(signal_router)
 app.include_router(trade_router)
 
+app.include_router(health_router, prefix="/api/v1")
+app.include_router(market_router, prefix="/api/v1")
+app.include_router(signal_router, prefix="/api/v1")
+app.include_router(trade_router, prefix="/api/v1")
+
 
 @app.get("/")
 def root() -> dict[str, str]:
