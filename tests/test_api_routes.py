@@ -254,3 +254,47 @@ def test_market_decision_endpoint() -> None:
     assert payload["risk_score"] == 20.0
     assert payload["trade_quality_score"] == 82.0
     assert payload["explanation"]["summary"]
+
+
+def test_market_decision_endpoint_contract() -> None:
+    fake_decision = {
+        "engine": "TRINETRA_AI_DECISION_HUB",
+        "decision": "WAIT",
+        "action": "WAIT",
+        "score": 50.0,
+        "confidence_score": 65.0,
+        "confidence": "MEDIUM",
+        "risk_score": 35.0,
+        "trade_quality_score": 65.0,
+        "risk": "MEDIUM",
+        "reasons": ["Mixed market signals"],
+        "warnings": [],
+        "explanation": {
+            "summary": "WAIT with MEDIUM confidence and MEDIUM risk.",
+            "reasons": ["Mixed market signals"],
+            "warnings": [],
+        },
+    }
+
+    with patch.object(
+        market_route,
+        "build_market_decision",
+        return_value=fake_decision,
+    ):
+        response = client.get("/market/decision?symbol=NIFTY")
+
+    assert response.status_code == 200
+
+    payload = response.json()
+
+    required_fields = {
+        "decision",
+        "action",
+        "confidence_score",
+        "risk_score",
+        "trade_quality_score",
+        "explanation",
+    }
+
+    assert required_fields.issubset(payload)
+    assert isinstance(payload["explanation"], dict)
