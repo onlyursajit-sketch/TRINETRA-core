@@ -298,3 +298,45 @@ def test_market_decision_endpoint_contract() -> None:
 
     assert required_fields.issubset(payload)
     assert isinstance(payload["explanation"], dict)
+
+
+def test_market_decision_requires_api_key(monkeypatch) -> None:
+    monkeypatch.setenv("TRINETRA_API_KEY", "secret-key")
+
+    response = client.get(
+        "/market/decision",
+        params={"symbol": "NIFTY"},
+    )
+
+    assert response.status_code == 401
+
+
+def test_market_decision_accepts_valid_api_key(monkeypatch) -> None:
+    monkeypatch.setenv("TRINETRA_API_KEY", "secret-key")
+
+    fake_decision = {
+        "decision": "WAIT",
+        "action": "WAIT",
+        "confidence_score": 60.0,
+        "risk_score": 40.0,
+        "trade_quality_score": 60.0,
+        "explanation": {
+            "summary": "WAIT",
+            "reasons": [],
+            "warnings": [],
+        },
+    }
+
+    with patch.object(
+        market_route,
+        "build_market_decision",
+        return_value=fake_decision,
+    ):
+        response = client.get(
+            "/market/decision",
+            params={"symbol": "NIFTY"},
+            headers={"X-API-Key": "secret-key"},
+        )
+
+    assert response.status_code == 200
+    assert response.json()["decision"] == "WAIT"
