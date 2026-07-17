@@ -8,7 +8,9 @@ import {
 } from "./services/api";
 
 function App() {
-  const [symbol, setSymbol] = useState("NIFTY");
+  const [symbol, setSymbol] = useState(() => {
+    return localStorage.getItem("trinetra:symbol") || "NIFTY";
+  });
   const [context, setContext] = useState(null);
   const [decision, setDecision] = useState(null);
   const [providers, setProviders] = useState(null);
@@ -26,6 +28,10 @@ function App() {
       String(autoRefresh)
     );
   }, [autoRefresh]);
+
+  useEffect(() => {
+    localStorage.setItem("trinetra:symbol", symbol);
+  }, [symbol]);
 
   useEffect(() => {
     if (!autoRefresh) {
