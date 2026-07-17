@@ -271,3 +271,29 @@ select {
   color: #d8b46a;
   font-size: 13px;
 }
+
+.freshness-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.freshness-badge {
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.freshness-badge.fresh {
+  border: 1px solid #2f6f4e;
+}
+
+.freshness-badge.aging {
+  border: 1px solid #8a6d3b;
+}
+
+.freshness-badge.stale {
+  border: 1px solid #8a3d3d;
+}
