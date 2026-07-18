@@ -39,3 +39,10 @@ export function fetchMarketDecision(symbol = "NIFTY") {
 export function fetchProviderHealth() {
   return request("/api/v1/market/providers/health");
 }
+
+export function fetchOptionChain(symbol = "NIFTY") {
+  return request(
+    `/api/v1/market/option-chain?symbol=${encodeURIComponent(symbol)}`
+  );
+}
+
