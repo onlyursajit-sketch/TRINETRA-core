@@ -255,28 +255,20 @@ function App() {
 
         <article className="card">
           <h2>Option Chain Intelligence</h2>
-          <p>PCR: {context?.pcr ?? "N/A"}</p>
-          <p>Max Pain: {context?.max_pain ?? "N/A"}</p>
+          <p>PCR: {optionChain?.pcr != null ? Number(optionChain.pcr).toFixed(2) : "N/A"}</p>
+          <p>Max Pain: {optionChain?.max_pain ?? "N/A"}</p>
           <p>
-            OI Bias:{" "}
-            {!context
-              ? "Loading..."
-              : context.pcr == null && context.max_pain == null
-                ? "NO DATA"
-                : context.oi_bullish
-                  ? "BULLISH"
-                  : "BEARISH / NEUTRAL"}
-          </p>
+              OI Bias:{" "}
+              {!optionChain
+                ? "Loading..."
+                : optionChain.oi_bias ?? optionChain.pcr_bias ?? "NO DATA"}
+            </p>
           <p>
-            Volume Bias:{" "}
-            {!context
-              ? "Loading..."
-              : context.pcr == null && context.max_pain == null
-                ? "NO DATA"
-                : context.volume_bullish
-                  ? "BULLISH"
-                  : "BEARISH / NEUTRAL"}
-          </p>
+              Volume Bias:{" "}
+              {!optionChain
+                ? "Loading..."
+                : optionChain.volume_bias ?? "NO DATA"}
+            </p>
         <p>Data Status: {optionChain?.data_status ?? "Loading..."}</p>
         <p>Source: {optionChain?.source ?? "N/A"}</p>
         <p>Provider: {optionChain?.provider_used ?? "N/A"}</p>
