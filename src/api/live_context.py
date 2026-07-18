@@ -21,7 +21,9 @@ def build_live_context(builder: Any, symbol: str) -> Any:
     vix_payload: dict[str, Any] | None = None
 
     try:
-        options_result = option_chain_collector.collect(symbol)
+        from src.pipelines.options_analytics_pipeline import OptionsAnalyticsPipeline
+
+        options_result = OptionsAnalyticsPipeline().run(symbol)
     except Exception:
         options_result = None
 

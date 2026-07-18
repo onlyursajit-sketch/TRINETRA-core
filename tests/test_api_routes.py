@@ -609,3 +609,59 @@ def test_market_option_chain_endpoint_includes_analytics(monkeypatch) -> None:
     assert payload["oi_bias"] == "BULLISH"
     assert payload["volume_bias"] == "BULLISH"
 
+def test_market_context_uses_option_analytics_snapshot(monkeypatch) -> None:
+    from fastapi.testclient import TestClient
+    from src.api.app import app
+    from src.api.routes import market
+
+    captured = {}
+
+    class FakeBuilder:
+        def build(self, **kwargs):
+            from src.intelligence.context_builder import MarketContext
+
+            captured.update(kwargs)
+            return MarketContext(
+                symbol=kwargs.get("symbol", "NIFTY"),
+                confidence=75.0,
+            )
+
+    class FakePipeline:
+        def run(self, symbol):
+            return {
+                "symbol": symbol,
+                "data_status": "STALE",
+                "option_chain": {
+                    "symbol": symbol,
+                    "records": [],
+                    "data_status": "STALE",
+                },
+                "pcr": {
+                    "overall_pcr": 0.98,
+                    "market_bias": "NEUTRAL_BEARISH",
+                },
+                "max_pain": {
+                    "max_pain_strike": 25000.0,
+                },
+                "oi": {
+                    "market_bias": "BULLISH",
+                },
+                "volume_analysis": {
+                    "market_bias": "BULLISH",
+                },
+                "analytics_allowed": True,
+                "errors": [],
+            }
+
+    monkeypatch.setattr(market, "builder", FakeBuilder())
+    monkeypatch.setattr(market, "options_pipeline", FakePipeline())
+
+    response = TestClient(app).get(
+        "/api/v1/market/context",
+        params={"symbol": "NIFTY"},
+    )
+
+    assert response.status_code == 200
+    assert captured["options_result"]["pcr"]["overall_pcr"] == 0.9804
+    assert captured["options_result"]["max_pain"]["max_pain_strike"] == 25000.0
+
