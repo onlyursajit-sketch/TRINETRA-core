@@ -5,6 +5,7 @@ import {
   fetchMarketContext,
   fetchMarketDecision,
   fetchProviderHealth,
+  fetchOptionChain,
 } from "./services/api";
 
 function App() {
@@ -14,6 +15,7 @@ function App() {
   const [context, setContext] = useState(null);
   const [decision, setDecision] = useState(null);
   const [providers, setProviders] = useState(null);
+  const [optionChain, setOptionChain] = useState(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -54,16 +56,22 @@ function App() {
         setError("");
         setLoading(true);
 
-        const [contextData, decisionData, providerData] =
-          await Promise.all([
-            fetchMarketContext(symbol),
-            fetchMarketDecision(symbol),
-            fetchProviderHealth(),
-          ]);
+      const [
+        contextData,
+        decisionData,
+        providerData,
+        optionChainData,
+      ] = await Promise.all([
+        fetchMarketContext(symbol),
+        fetchMarketDecision(symbol),
+        fetchProviderHealth(),
+        fetchOptionChain(symbol),
+      ]);
 
         setContext(contextData);
         setDecision(decisionData);
         setProviders(providerData);
+      setOptionChain(optionChainData);
         const updatedAt = new Date();
       setLastUpdated(updatedAt);
       localStorage.setItem(
@@ -269,6 +277,37 @@ function App() {
                   ? "BULLISH"
                   : "BEARISH / NEUTRAL"}
           </p>
+        <p>Data Status: {optionChain?.data_status ?? "Loading..."}</p>
+        <p>Source: {optionChain?.source ?? "N/A"}</p>
+        <p>Provider: {optionChain?.provider_used ?? "N/A"}</p>
+        <p>
+          Records:{" "}
+          {Array.isArray(optionChain?.records)
+            ? optionChain.records.length
+            : 0}
+        </p>
+
+        {Array.isArray(optionChain?.records) &&
+          optionChain.records.length > 0 && (
+            <div className="option-chain-mini-table">
+              <div className="option-chain-mini-row option-chain-mini-head">
+                <span>CE OI</span>
+                <span>Strike</span>
+                <span>PE OI</span>
+              </div>
+
+              {optionChain.records.slice(0, 5).map((row, index) => (
+                <div
+                  className="option-chain-mini-row"
+                  key={`${row.strike_price ?? "strike"}-${index}`}
+                >
+                  <span>{row.ce?.openInterest ?? "-"}</span>
+                  <strong>{row.strike_price ?? "-"}</strong>
+                  <span>{row.pe?.openInterest ?? "-"}</span>
+                </div>
+              ))}
+            </div>
+          )}
         </article>
 
         <article className="card">
@@ -291,6 +330,8 @@ function App() {
               "Loading..."}
           </p>
         </article>
+
+
       </section>
     </main>
   );

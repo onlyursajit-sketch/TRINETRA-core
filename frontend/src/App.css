@@ -297,3 +297,64 @@ select {
 .freshness-badge.stale {
   border: 1px solid #8a3d3d;
 }
+
+.option-chain-table-card {
+  grid-column: 1 / -1;
+}
+
+.option-chain-scroll {
+  overflow-x: auto;
+  margin-top: 12px;
+}
+
+.option-chain-table {
+  width: 100%;
+  min-width: 900px;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.option-chain-table th,
+.option-chain-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid #28334d;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.option-chain-table th {
+  color: #9aa7bd;
+  font-weight: 700;
+}
+
+.option-chain-table .strike-cell {
+  text-align: center;
+  font-weight: 700;
+}
+
+.option-chain-mini-table {
+  margin-top: 14px;
+  border: 1px solid #28334d;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.option-chain-mini-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+  padding: 9px 10px;
+  border-bottom: 1px solid #28334d;
+  text-align: center;
+  font-size: 13px;
+}
+
+.option-chain-mini-row:last-child {
+  border-bottom: 0;
+}
+
+.option-chain-mini-head {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
