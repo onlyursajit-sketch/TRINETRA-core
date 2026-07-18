@@ -173,19 +173,15 @@ function App() {
         <article className="card">
           <h2>Market Context</h2>
           <p>Symbol: {context?.symbol ?? "Loading..."}</p>
-          <p>
-            Confidence: {context?.confidence ?? "Loading..."}
-          </p>
-          <p>
-            Regime: {context?.regime ?? "Loading..."}
-          </p>
-          <p>
-            VIX: {context?.vix ?? "N/A"}
-          </p>
-          <p>
-            Market Status:{" "}
-            {decision?.market_status ?? "Loading..."}
-          </p>
+          <p>Confidence: {context?.confidence ?? "Loading..."}</p>
+          <p>Regime: {context?.regime ?? "Loading..."}</p>
+          <p>VIX: {context?.vix ?? "N/A"}</p>
+          <p>Market Status: {decision?.market_status ?? "Loading..."}</p>
+
+          <p>PCR: {context?.pcr ?? "N/A"}</p>
+          <p>Max Pain: {context?.max_pain ?? "N/A"}</p>
+          <p>OI Bias: {context?.oi_bias ?? "NO DATA"}</p>
+          <p>Volume Bias: {context?.volume_bias ?? "NO DATA"}</p>
         </article>
 
         <article className="card">
