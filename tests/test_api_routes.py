@@ -665,3 +665,75 @@ def test_market_context_uses_option_analytics_snapshot(monkeypatch) -> None:
     assert captured["options_result"]["pcr"]["overall_pcr"] == 0.9804
     assert captured["options_result"]["max_pain"]["max_pain_strike"] == 25000.0
 
+def test_market_decision_receives_option_analytics_snapshot(monkeypatch) -> None:
+    from fastapi.testclient import TestClient
+    from src.api.app import app
+    from src.api.routes import market
+
+    captured = {}
+
+    from dataclasses import dataclass
+
+    @dataclass
+    class FakeContext:
+        symbol: str = "NIFTY"
+        confidence: float = 75.0
+
+    class FakeBuilder:
+        def build(self, **kwargs):
+            return FakeContext()
+
+    class FakePipeline:
+        def run(self, symbol):
+            return {
+                "symbol": symbol,
+                "data_status": "LIVE",
+                "option_chain": {
+                    "symbol": symbol,
+                    "records": [],
+                    "data_status": "LIVE",
+                },
+                "pcr": {
+                    "overall_pcr": 1.12,
+                    "market_bias": "BULLISH",
+                },
+                "max_pain": {
+                    "max_pain_strike": 25000.0,
+                },
+                "oi": {
+                    "market_bias": "BULLISH",
+                },
+                "volume_analysis": {
+                    "market_bias": "BULLISH",
+                },
+                "analytics_allowed": True,
+                "errors": [],
+            }
+
+    class FakeDecisionHub:
+        def decide(self, payload):
+            captured.update(payload)
+            return {
+                "decision": "WAIT",
+                "confidence_score": 50,
+                "risk_score": 10,
+                "trade_quality_score": 40,
+                "market_status": "LIVE",
+                "explanation": {
+                    "summary": "test",
+                    "reasons": [],
+                },
+            }
+
+    monkeypatch.setattr(market, "builder", FakeBuilder())
+    monkeypatch.setattr(market, "options_pipeline", FakePipeline())
+    monkeypatch.setattr(market, "AIDecisionHub", FakeDecisionHub)
+
+    response = TestClient(app).get("/api/v1/market/decision?symbol=NIFTY")
+
+    assert response.status_code == 200
+    assert captured["snapshot"]["pcr"]["overall_pcr"] == 1.12
+    assert captured["snapshot"]["max_pain"]["max_pain_strike"] == 25000.0
+    assert captured["snapshot"]["oi"]["market_bias"] == "BULLISH"
+    assert captured["snapshot"]["volume_analysis"]["market_bias"] == "BULLISH"
+

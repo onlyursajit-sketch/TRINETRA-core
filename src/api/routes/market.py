@@ -32,9 +32,17 @@ def market_context(
 
 
 def build_market_decision(symbol: str) -> dict:
-    context = build_live_context(builder, symbol)
-    snapshot = asdict(context)
-    return AIDecisionHub().decide(snapshot)
+    clean_symbol = symbol.strip().upper()
+
+    context = build_live_context(builder, clean_symbol)
+    context_snapshot = asdict(context)
+
+    options_snapshot = options_pipeline.run(clean_symbol)
+
+    market_result = dict(context_snapshot)
+    market_result["snapshot"] = options_snapshot
+
+    return AIDecisionHub().decide(market_result)
 
 
 @router.get("/decision")
