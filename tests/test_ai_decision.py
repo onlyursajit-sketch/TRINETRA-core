@@ -294,3 +294,39 @@ def test_decision_includes_structured_explanation() -> None:
     assert result["explanation"]["summary"]
     assert result["explanation"]["reasons"] == result["reasons"]
     assert result["explanation"]["warnings"] == result["warnings"]
+
+def test_decision_uses_oi_and_volume_bias() -> None:
+    from src.decision.ai_decision import AIDecisionHub
+
+    hub = AIDecisionHub()
+
+    result = hub.decide({
+        "snapshot": {
+            "market_status": "LIVE",
+            "analytics_allowed": True,
+            "source_confidence": 90,
+            "confidence": "HIGH",
+            "institutional_score": 0,
+            "oi": {
+                "market_bias": "BULLISH",
+            },
+            "volume_analysis": {
+                "market_bias": "BULLISH",
+            },
+        },
+        "global": {
+            "source_confidence": 90,
+            "global_bias": "NEUTRAL",
+        },
+    })
+
+    assert result["score"] > 0
+    assert any(
+        "open interest" in reason.lower()
+        for reason in result["explanation"]["reasons"]
+    )
+    assert any(
+        "volume" in reason.lower()
+        for reason in result["explanation"]["reasons"]
+    )
+

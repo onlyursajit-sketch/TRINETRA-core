@@ -279,6 +279,45 @@ class AIDecisionHub:
                     "CROWDED_PCR_POSITIONING"
                 )
 
+
+        oi = snapshot.get("oi")
+
+        if isinstance(oi, dict):
+            oi_bias = self._text(
+                oi.get("market_bias"),
+            )
+
+            if oi_bias == "BULLISH":
+                score += 10
+                reasons.append(
+                    "Open interest structure is bullish."
+                )
+
+            elif oi_bias == "BEARISH":
+                score -= 10
+                reasons.append(
+                    "Open interest structure is bearish."
+                )
+
+        volume_analysis = snapshot.get("volume_analysis")
+
+        if isinstance(volume_analysis, dict):
+            volume_bias = self._text(
+                volume_analysis.get("market_bias"),
+            )
+
+            if volume_bias == "BULLISH":
+                score += 8
+                reasons.append(
+                    "Volume participation supports bullish momentum."
+                )
+
+            elif volume_bias == "BEARISH":
+                score -= 8
+                reasons.append(
+                    "Volume participation supports bearish momentum."
+                )
+
         score = round(
             self._clamp(
                 score,
