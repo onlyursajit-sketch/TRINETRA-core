@@ -254,6 +254,34 @@ class AIDecisionHub:
                     "Domestic institutions are supporting the market."
                 )
 
+        max_pain = snapshot.get("max_pain")
+
+        if isinstance(max_pain, dict):
+            max_pain_strike = self._number(
+                max_pain.get("max_pain_strike"),
+                0.0,
+            )
+            spot_price = self._number(
+                max_pain.get("spot_price"),
+                0.0,
+            )
+
+            if max_pain_strike > 0:
+                if spot_price > 0:
+                    distance_pct = abs(
+                        spot_price - max_pain_strike
+                    ) / max_pain_strike * 100
+
+                    reasons.append(
+                        f"Max Pain is {max_pain_strike:.0f}; "
+                        f"spot is {distance_pct:.2f}% away."
+                    )
+                else:
+                    reasons.append(
+                        f"Max Pain is positioned near "
+                        f"{max_pain_strike:.0f}."
+                    )
+
         pcr = snapshot.get("pcr")
 
         if isinstance(pcr, dict):

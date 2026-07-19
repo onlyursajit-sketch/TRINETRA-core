@@ -330,3 +330,31 @@ def test_decision_uses_oi_and_volume_bias() -> None:
         for reason in result["explanation"]["reasons"]
     )
 
+def test_decision_uses_max_pain_context() -> None:
+    from src.decision.ai_decision import AIDecisionHub
+
+    hub = AIDecisionHub()
+
+    result = hub.decide({
+        "snapshot": {
+            "market_status": "LIVE",
+            "analytics_allowed": True,
+            "source_confidence": 90,
+            "confidence": "HIGH",
+            "institutional_score": 0,
+            "max_pain": {
+                "max_pain_strike": 25000,
+                "spot_price": 25100,
+            },
+        },
+        "global": {
+            "source_confidence": 90,
+            "global_bias": "NEUTRAL",
+        },
+    })
+
+    assert any(
+        "max pain" in reason.lower()
+        for reason in result["explanation"]["reasons"]
+    )
+
