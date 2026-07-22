@@ -358,3 +358,47 @@ def test_decision_uses_max_pain_context() -> None:
         for reason in result["explanation"]["reasons"]
     )
 
+def test_decision_uses_strike_cluster_context() -> None:
+    from src.decision.ai_decision import AIDecisionHub
+
+    result = AIDecisionHub().decide({
+        "snapshot": {
+            "market_status": "LIVE",
+            "analytics_allowed": True,
+            "source_confidence": 90,
+            "confidence": "HIGH",
+            "institutional_score": 0,
+            "strike_clusters": {
+                "cluster_count": 2,
+                "strongest_support": {
+                    "cluster_start": 25000,
+                    "cluster_end": 25099,
+                    "bias": "SUPPORT",
+                    "strength": 1500,
+                },
+                "strongest_resistance": {
+                    "cluster_start": 25300,
+                    "cluster_end": 25399,
+                    "bias": "RESISTANCE",
+                    "strength": 1200,
+                },
+                "top_clusters": [],
+            },
+        },
+        "global": {
+            "source_confidence": 90,
+            "global_bias": "NEUTRAL",
+        },
+    })
+
+    reasons = result["explanation"]["reasons"]
+
+    assert any(
+        "support" in reason.lower()
+        for reason in reasons
+    )
+    assert any(
+        "resistance" in reason.lower()
+        for reason in reasons
+    )
+

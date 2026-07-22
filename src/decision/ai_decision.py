@@ -327,6 +327,29 @@ class AIDecisionHub:
                     "Open interest structure is bearish."
                 )
 
+        strike_clusters = snapshot.get("strike_clusters")
+
+        if isinstance(strike_clusters, dict):
+            strongest_support = strike_clusters.get("strongest_support")
+            strongest_resistance = strike_clusters.get("strongest_resistance")
+
+            if isinstance(strongest_support, dict):
+                support_start = strongest_support.get("cluster_start")
+                support_end = strongest_support.get("cluster_end")
+                reasons.append(
+                    f"Strong option-chain support cluster is positioned at "
+                    f"{support_start}-{support_end}."
+                )
+
+            if isinstance(strongest_resistance, dict):
+                resistance_start = strongest_resistance.get("cluster_start")
+                resistance_end = strongest_resistance.get("cluster_end")
+                reasons.append(
+                    f"Strong option-chain resistance cluster is positioned at "
+                    f"{resistance_start}-{resistance_end}."
+                )
+
+
         volume_analysis = snapshot.get("volume_analysis")
 
         if isinstance(volume_analysis, dict):
