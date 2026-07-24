@@ -432,3 +432,37 @@ def test_decision_scores_strong_strike_cluster_support() -> None:
 
     assert result["score"] > 0
 
+def test_decision_scores_strong_strike_cluster_resistance() -> None:
+    from src.decision.ai_decision import AIDecisionHub
+
+    result = AIDecisionHub().decide({
+        "snapshot": {
+            "market_status": "LIVE",
+            "analytics_allowed": True,
+            "source_confidence": 90,
+            "confidence": "HIGH",
+            "institutional_score": 0,
+            "strike_clusters": {
+                "cluster_count": 2,
+                "strongest_support": None,
+                "strongest_resistance": {
+                    "cluster_start": 25300,
+                    "cluster_end": 25399,
+                    "bias": "RESISTANCE",
+                    "strength": 1800,
+                },
+                "top_clusters": [],
+            },
+        },
+        "global": {
+            "source_confidence": 90,
+            "global_bias": "NEUTRAL",
+        },
+    })
+
+    assert result["score"] < 0
+    assert any(
+        "resistance" in reason.lower()
+        for reason in result["explanation"]["reasons"]
+    )
+
