@@ -402,3 +402,33 @@ def test_decision_uses_strike_cluster_context() -> None:
         for reason in reasons
     )
 
+def test_decision_scores_strong_strike_cluster_support() -> None:
+    from src.decision.ai_decision import AIDecisionHub
+
+    result = AIDecisionHub().decide({
+        "snapshot": {
+            "market_status": "LIVE",
+            "analytics_allowed": True,
+            "source_confidence": 90,
+            "confidence": "HIGH",
+            "institutional_score": 0,
+            "strike_clusters": {
+                "cluster_count": 2,
+                "strongest_support": {
+                    "cluster_start": 25000,
+                    "cluster_end": 25099,
+                    "bias": "SUPPORT",
+                    "strength": 1800,
+                },
+                "strongest_resistance": None,
+                "top_clusters": [],
+            },
+        },
+        "global": {
+            "source_confidence": 90,
+            "global_bias": "NEUTRAL",
+        },
+    })
+
+    assert result["score"] > 0
+

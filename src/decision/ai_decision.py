@@ -369,6 +369,34 @@ class AIDecisionHub:
                     "Volume participation supports bearish momentum."
                 )
 
+        strike_clusters = snapshot.get("strike_clusters")
+
+        if isinstance(strike_clusters, dict):
+            strongest_support = strike_clusters.get("strongest_support")
+            strongest_resistance = strike_clusters.get("strongest_resistance")
+
+            if isinstance(strongest_support, dict):
+                support_strength = self._number(
+                    strongest_support.get("strength"),
+                    0.0,
+                )
+                if support_strength > 0:
+                    score += min(12.0, support_strength / 150.0)
+                    reasons.append(
+                        "Strong strike-cluster support adds bullish conviction."
+                    )
+
+            if isinstance(strongest_resistance, dict):
+                resistance_strength = self._number(
+                    strongest_resistance.get("strength"),
+                    0.0,
+                )
+                if resistance_strength > 0:
+                    score -= min(12.0, resistance_strength / 150.0)
+                    reasons.append(
+                        "Strong strike-cluster resistance adds bearish pressure."
+                    )
+
         score = round(
             self._clamp(
                 score,
