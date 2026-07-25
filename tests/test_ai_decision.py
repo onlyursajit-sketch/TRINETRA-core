@@ -510,3 +510,37 @@ def test_decision_rewards_bullish_multi_signal_confluence() -> None:
         for reason in result["explanation"]["reasons"]
     )
 
+
+
+def test_decision_exposes_structured_why_payload() -> None:
+    hub = AIDecisionHub()
+
+    result = hub.decide(
+        {
+            "global": {
+                "global_bias": "BULLISH",
+                "source_confidence": 90,
+                "warnings": [],
+            },
+            "snapshot": {
+                "market_status": "LIVE",
+                "analytics_allowed": True,
+                "source_confidence": 90,
+                "confidence": "HIGH",
+                "warnings": [],
+                "pcr": {
+                    "overall_pcr": 1.08,
+                    "market_bias": "BULLISH",
+                },
+                "oi": {
+                    "market_bias": "BULLISH",
+                },
+            },
+        }
+    )
+
+    assert result["why"]["schema_version"] == "1.0"
+    assert result["why"]["decision"] == result["decision"]
+    assert result["why"]["confidence_score"] == result["confidence_score"]
+    assert result["why"]["causes"]
+    assert result["why"]["causes"][0]["sequence"] == 1

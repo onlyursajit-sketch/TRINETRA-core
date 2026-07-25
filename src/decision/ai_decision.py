@@ -1,4 +1,5 @@
 from __future__ import annotations
+from src.decision.why_engine import WhyEngine
 
 from typing import Any
 
@@ -552,6 +553,13 @@ class AIDecisionHub:
             "warnings": list(warnings),
         }
 
+        why = WhyEngine.build(
+            decision=decision,
+            confidence_score=confidence_score,
+            reasons=reasons,
+            warnings=warnings,
+        )
+
         return {
             "engine": "TRINETRA_AI_DECISION_HUB",
             "decision": decision,
@@ -575,6 +583,7 @@ class AIDecisionHub:
             "reasons": reasons,
             "warnings": warnings,
             "explanation": explanation,
+            "why": why,
             "rule": (
                 "Decision support only. "
                 "No standalone prediction."
