@@ -54,3 +54,22 @@ def test_invalid_max_position_percentage_is_rejected(
             max_position_pct=max_position_pct,
             min_risk_reward=2.0,
         )
+
+
+@pytest.mark.parametrize(
+    "min_risk_reward",
+    [0.0, -1.0],
+)
+def test_non_positive_minimum_risk_reward_is_rejected(
+    min_risk_reward: float,
+) -> None:
+    with pytest.raises(
+        ValueError,
+        match="Minimum risk-reward must be greater than zero",
+    ):
+        RiskConfig(
+            capital=100000,
+            risk_per_trade_pct=1.0,
+            max_position_pct=20.0,
+            min_risk_reward=min_risk_reward,
+        )

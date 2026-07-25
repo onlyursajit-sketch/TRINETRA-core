@@ -25,3 +25,8 @@ class RiskConfig:
             raise ValueError(
                 "Maximum position percentage must be between 0 and 100"
             )
+
+        if self.min_risk_reward <= 0:
+            raise ValueError(
+                "Minimum risk-reward must be greater than zero"
+            )
