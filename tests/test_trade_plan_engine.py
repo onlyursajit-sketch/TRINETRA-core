@@ -38,7 +38,7 @@ class TestTradePlanEngine(unittest.TestCase):
         self.assertFalse(plan.approved)
         self.assertEqual(
             plan.reason,
-            "Trade rejected by risk rules.",
+            "Risk-reward 0.60 is below required minimum 2.00.",
         )
 
     def test_position_value_limit(self) -> None:
@@ -56,3 +56,25 @@ class TestTradePlanEngine(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
+
+
+def test_trade_plan_explains_low_risk_reward_rejection() -> None:
+    engine = TradePlanEngine(
+        RiskConfig(
+            capital=100000,
+            risk_per_trade_pct=1.0,
+            max_position_pct=20.0,
+            min_risk_reward=2.0,
+        )
+    )
+
+    plan = engine.create(
+        entry=100.0,
+        stop_loss=95.0,
+        target=103.0,
+    )
+
+    assert plan.approved is False
+    assert plan.reason == (
+        "Risk-reward 0.60 is below required minimum 2.00."
+    )

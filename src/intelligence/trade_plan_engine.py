@@ -41,11 +41,18 @@ class TradePlanEngine:
 
         approved = self.validator.validate(result)
 
-        reason = (
-            "Trade satisfies risk rules."
-            if approved
-            else "Trade rejected by risk rules."
-        )
+        if approved:
+            reason = "Trade satisfies risk rules."
+        elif result.risk_reward < self.validator.config.min_risk_reward:
+            reason = (
+                f"Risk-reward {result.risk_reward:.2f} "
+                f"is below required minimum "
+                f"{self.validator.config.min_risk_reward:.2f}."
+            )
+        elif result.quantity <= 0:
+            reason = "Trade rejected because position quantity is zero."
+        else:
+            reason = "Trade rejected by risk rules."
 
         return TradePlan(
             approved=approved,
