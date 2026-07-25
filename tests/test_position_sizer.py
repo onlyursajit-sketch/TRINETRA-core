@@ -170,3 +170,38 @@ def test_target_equal_to_entry_is_rejected() -> None:
             stop_loss=95.0,
             target=100.0,
         )
+
+
+@pytest.mark.parametrize(
+    ("entry", "stop_loss", "target"),
+    [
+        (100.0, 95.0, 90.0),
+        (100.0, 105.0, 110.0),
+    ],
+)
+def test_stop_loss_and_target_must_be_on_opposite_sides(
+    entry: float,
+    stop_loss: float,
+    target: float,
+) -> None:
+    sizer = PositionSizer(
+        RiskConfig(
+            capital=100000,
+            risk_per_trade_pct=1.0,
+            max_position_pct=20.0,
+            min_risk_reward=2.0,
+        )
+    )
+
+    with pytest.raises(
+        ValueError,
+        match=(
+            "Stop-loss and target must be on opposite "
+            "sides of entry price"
+        ),
+    ):
+        sizer.calculate(
+            entry=entry,
+            stop_loss=stop_loss,
+            target=target,
+        )

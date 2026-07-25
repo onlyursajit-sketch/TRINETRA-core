@@ -57,6 +57,16 @@ class PositionSizer:
                 "Target price must differ from entry price"
             )
 
+        if (
+            stop_loss < entry and target < entry
+        ) or (
+            stop_loss > entry and target > entry
+        ):
+            raise ValueError(
+                "Stop-loss and target must be on opposite "
+                "sides of entry price"
+            )
+
         risk_per_share = abs(entry - stop_loss)
 
         if risk_per_share <= 0:
