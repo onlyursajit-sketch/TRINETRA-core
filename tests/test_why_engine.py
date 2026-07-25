@@ -150,3 +150,19 @@ def test_why_engine_builds_narrative_summary() -> None:
     assert result["narrative"]["risk"] == (
         "Primary risk: CRITICAL VOLATILITY warning."
     )
+
+
+def test_why_engine_aligns_narrative_with_confidence() -> None:
+    result = WhyEngine.build(
+        decision="BUY_BIAS",
+        confidence_score=91.0,
+        reasons=[
+            "Bullish multi-signal confluence strengthens market conviction.",
+        ],
+        warnings=[],
+    )
+
+    assert result["narrative"]["confidence_level"] == "HIGH"
+    assert result["narrative"]["confidence_statement"] == (
+        "Decision confidence is HIGH at 91.0%."
+    )

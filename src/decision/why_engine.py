@@ -157,6 +157,7 @@ class WhyEngine:
     def _build_narrative(
         *,
         decision: str,
+        confidence_score: float,
         bullish: dict[str, Any] | None,
         bearish: dict[str, Any] | None,
         risk: dict[str, Any] | None,
@@ -191,10 +192,22 @@ class WhyEngine:
             else None
         )
 
+        if confidence_score >= 80.0:
+            confidence_level = "HIGH"
+        elif confidence_score >= 60.0:
+            confidence_level = "MODERATE"
+        else:
+            confidence_level = "LOW"
+
         return {
             "headline": headline,
             "counter_signal": counter_signal,
             "risk": risk_summary,
+            "confidence_level": confidence_level,
+            "confidence_statement": (
+                f"Decision confidence is {confidence_level} "
+                f"at {confidence_score:.1f}%."
+            ),
         }
 
     @classmethod
@@ -226,6 +239,7 @@ class WhyEngine:
             },
             "narrative": cls._build_narrative(
                 decision=decision,
+                confidence_score=confidence_score,
                 bullish=bullish,
                 bearish=bearish,
                 risk=risk,
