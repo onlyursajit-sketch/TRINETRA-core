@@ -416,3 +416,37 @@ def test_snapshot_exposes_source_confidence_breakdown() -> None:
         "valid_source_count": 3,
         "average": 80.0,
     }
+
+
+def test_snapshot_excludes_invalid_source_confidence_values() -> None:
+    result = MarketSnapshotEngine().build(
+        {
+            "symbol": "NIFTY",
+            "data_status": "LIVE",
+            "analytics_allowed": True,
+            "source_confidence": 150,
+            "errors": [],
+            "option_chain": {},
+            "oi": {},
+            "pcr": {},
+            "max_pain": {},
+        },
+        {
+            "data_status": "LIVE",
+            "source_confidence": -10,
+            "risk_regime": "LOW",
+        },
+        {
+            "data_status": "LIVE",
+            "source_confidence": 80,
+            "market_bias": "NEUTRAL",
+        },
+    )
+
+    confidence_sources = result["data_quality"]["confidence_sources"]
+
+    assert confidence_sources["options"] is None
+    assert confidence_sources["india_vix"] is None
+    assert confidence_sources["fii_dii"] == 80.0
+    assert confidence_sources["valid_source_count"] == 1
+    assert confidence_sources["average"] == 80.0
