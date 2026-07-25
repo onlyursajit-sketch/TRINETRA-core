@@ -69,3 +69,32 @@ def test_why_engine_adds_evidence_metadata() -> None:
     assert result["causes"][2]["category"] == "CONFLUENCE"
     assert result["causes"][2]["bias"] == "BULLISH"
     assert result["causes"][2]["strength"] == "STRONG"
+
+
+def test_why_engine_classifies_warning_severity() -> None:
+    result = WhyEngine.build(
+        decision="NO_TRADE",
+        confidence_score=0.0,
+        reasons=[],
+        warnings=[
+            "India VIX is extremely elevated.",
+            "Source confidence is low.",
+            "Market data is stale.",
+        ],
+    )
+
+    assert result["warnings"][0] == {
+        "sequence": 1,
+        "message": "India VIX is extremely elevated.",
+        "category": "VOLATILITY",
+        "source": "INDIA_VIX",
+        "severity": "CRITICAL",
+    }
+
+    assert result["warnings"][1]["category"] == "DATA_QUALITY"
+    assert result["warnings"][1]["source"] == "SOURCE_CONFIDENCE"
+    assert result["warnings"][1]["severity"] == "HIGH"
+
+    assert result["warnings"][2]["category"] == "DATA_FRESHNESS"
+    assert result["warnings"][2]["source"] == "MARKET_DATA"
+    assert result["warnings"][2]["severity"] == "HIGH"
