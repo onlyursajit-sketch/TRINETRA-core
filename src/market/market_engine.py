@@ -191,13 +191,47 @@ class MarketEngine:
         )
         execution_trace.append("MARKET_REPORT")
 
-        decision = self.decision_hub.decide(
-            {
-                "global": global_result,
-                "snapshot": snapshot,
+        failed_stages: list[str] = []
+
+        try:
+            decision = self.decision_hub.decide(
+                {
+                    "global": global_result,
+                    "snapshot": snapshot,
+                }
+            )
+            execution_trace.append("AI_DECISION")
+        except Exception:
+            decision = {
+                "decision": "NO_TRADE",
+                "action": "WAIT",
+                "score": 0.0,
+                "confidence_score": 0.0,
+                "confidence": "LOW",
+                "risk_score": 100.0,
+                "risk": "HIGH",
+                "trade_quality_score": 0.0,
+                "reasons": [],
+                "warnings": [
+                    "Decision engine unavailable."
+                ],
+                "explanation": {
+                    "summary": (
+                        "Decision engine unavailable; "
+                        "no trade decision issued."
+                    ),
+                    "reasons": [],
+                    "warnings": [
+                        "Decision engine unavailable."
+                    ],
+                },
+                "why": {},
+                "rule": (
+                    "Decision support only. "
+                    "No standalone prediction."
+                ),
             }
-        )
-        execution_trace.append("AI_DECISION")
+            failed_stages.append("AI_DECISION")
 
         ai_lines = [
             "=" * 68,
@@ -276,6 +310,12 @@ class MarketEngine:
             "snapshot": snapshot,
             "ai_decision": decision,
             "execution_trace": execution_trace,
+            "execution_status": (
+                "PARTIAL"
+                if failed_stages
+                else "COMPLETE"
+            ),
+            "failed_stages": failed_stages,
             "report": final_report,
         }
 

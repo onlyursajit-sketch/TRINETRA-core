@@ -212,3 +212,32 @@ def test_market_engine_exposes_execution_trace() -> None:
         "MARKET_REPORT",
         "AI_DECISION",
     ]
+
+
+class FailingDecisionHub:
+    def decide(self, market_result: dict) -> dict:
+        raise RuntimeError("decision hub unavailable")
+
+
+def test_market_engine_survives_decision_hub_failure() -> None:
+    engine = MarketEngine(
+        options_pipeline=FakeOptionsPipeline(),
+        snapshot_engine=FakeSnapshotEngine(),
+        report_generator=FakeMarketReportGenerator(),
+        global_command_center=FakeGlobalCommandCenter(),
+        global_report_generator=FakeGlobalReportGenerator(),
+        decision_hub=FailingDecisionHub(),
+    )
+
+    result = engine.build(
+        "NIFTY",
+        global_payloads={},
+    )
+
+    assert result["ai_decision"]["decision"] == "NO_TRADE"
+    assert result["ai_decision"]["action"] == "WAIT"
+    assert result["ai_decision"]["warnings"] == [
+        "Decision engine unavailable."
+    ]
+    assert result["execution_status"] == "PARTIAL"
+    assert result["failed_stages"] == ["AI_DECISION"]
