@@ -1000,6 +1000,24 @@ class MarketSnapshotEngine:
             "cache_path": None,
         }
 
+        snapshot["data_quality"] = {
+            "overall_status": snapshot["data_status"],
+            "source_confidence": snapshot["source_confidence"],
+            "confidence_label": snapshot["confidence"],
+            "analytics_allowed": snapshot["analytics_allowed"],
+            "source_statuses": snapshot["source_statuses"],
+            "warnings": snapshot["warnings"],
+        }
+
+        snapshot["data_quality"] = {
+            "overall_status": snapshot["data_status"],
+            "source_confidence": snapshot["source_confidence"],
+            "confidence_label": snapshot["confidence"],
+            "analytics_allowed": snapshot["analytics_allowed"],
+            "source_statuses": snapshot["source_statuses"],
+            "warnings": snapshot["warnings"],
+        }
+
         cache_path = self._write_snapshot_cache(
             symbol,
             snapshot,

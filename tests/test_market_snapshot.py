@@ -341,3 +341,38 @@ class TestMarketSnapshotEngine(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
+
+
+def test_snapshot_exposes_structured_data_quality() -> None:
+    result = MarketSnapshotEngine().build(
+        {
+            "symbol": "NIFTY",
+            "data_status": "LIVE",
+            "analytics_allowed": True,
+            "source_confidence": 90,
+            "errors": [],
+            "option_chain": {},
+            "oi": {},
+            "pcr": {},
+            "max_pain": {},
+        },
+        {
+            "data_status": "STALE",
+            "source_confidence": 70,
+            "risk_regime": "HIGH",
+        },
+        {
+            "data_status": "LIVE",
+            "source_confidence": 80,
+            "market_bias": "NEUTRAL",
+        },
+    )
+
+    assert result["data_quality"] == {
+        "overall_status": result["data_status"],
+        "source_confidence": result["source_confidence"],
+        "confidence_label": result["confidence"],
+        "analytics_allowed": result["analytics_allowed"],
+        "source_statuses": result["source_statuses"],
+        "warnings": result["warnings"],
+    }
