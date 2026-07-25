@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import unittest
 
+import pytest
+
 from src.intelligence.position_sizer import PositionSizer
 from src.intelligence.risk_config import RiskConfig
 
@@ -49,3 +51,24 @@ class TestPositionSizer(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
+
+
+def test_non_positive_entry_is_rejected() -> None:
+    sizer = PositionSizer(
+        RiskConfig(
+            capital=100000,
+            risk_per_trade_pct=1.0,
+            max_position_pct=20.0,
+            min_risk_reward=2.0,
+        )
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="Entry price must be greater than zero",
+    ):
+        sizer.calculate(
+            entry=0.0,
+            stop_loss=95.0,
+            target=110.0,
+        )

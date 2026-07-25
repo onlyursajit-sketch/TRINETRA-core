@@ -28,6 +28,11 @@ class PositionSizer:
         target: float,
     ) -> PositionResult:
 
+        if entry <= 0:
+            raise ValueError(
+                "Entry price must be greater than zero"
+            )
+
         risk_per_share = abs(entry - stop_loss)
 
         if risk_per_share <= 0:
