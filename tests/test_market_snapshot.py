@@ -368,11 +368,51 @@ def test_snapshot_exposes_structured_data_quality() -> None:
         },
     )
 
-    assert result["data_quality"] == {
-        "overall_status": result["data_status"],
-        "source_confidence": result["source_confidence"],
-        "confidence_label": result["confidence"],
-        "analytics_allowed": result["analytics_allowed"],
-        "source_statuses": result["source_statuses"],
-        "warnings": result["warnings"],
+    data_quality = result["data_quality"]
+
+    assert data_quality["overall_status"] == result["data_status"]
+    assert (
+        data_quality["source_confidence"]
+        == result["source_confidence"]
+    )
+    assert data_quality["confidence_label"] == result["confidence"]
+    assert (
+        data_quality["analytics_allowed"]
+        == result["analytics_allowed"]
+    )
+    assert data_quality["source_statuses"] == result["source_statuses"]
+    assert data_quality["warnings"] == result["warnings"]
+
+
+def test_snapshot_exposes_source_confidence_breakdown() -> None:
+    result = MarketSnapshotEngine().build(
+        {
+            "symbol": "NIFTY",
+            "data_status": "LIVE",
+            "analytics_allowed": True,
+            "source_confidence": 90,
+            "errors": [],
+            "option_chain": {},
+            "oi": {},
+            "pcr": {},
+            "max_pain": {},
+        },
+        {
+            "data_status": "LIVE",
+            "source_confidence": 70,
+            "risk_regime": "LOW",
+        },
+        {
+            "data_status": "LIVE",
+            "source_confidence": 80,
+            "market_bias": "NEUTRAL",
+        },
+    )
+
+    assert result["data_quality"]["confidence_sources"] == {
+        "options": 90.0,
+        "india_vix": 70.0,
+        "fii_dii": 80.0,
+        "valid_source_count": 3,
+        "average": 80.0,
     }

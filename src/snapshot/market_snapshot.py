@@ -293,18 +293,21 @@ class MarketSnapshotEngine:
         india_vix: dict[str, Any],
         fii_dii: dict[str, Any],
     ) -> list[float | None]:
-        option_chain = options_section.get(
-            "option_chain"
+        option_confidence = self._number(
+            options_section.get("source_confidence")
         )
 
-        option_confidence = None
-
-        if isinstance(option_chain, dict):
-            option_confidence = self._number(
-                option_chain.get(
-                    "source_confidence"
-                )
+        if option_confidence is None:
+            option_chain = options_section.get(
+                "option_chain"
             )
+
+            if isinstance(option_chain, dict):
+                option_confidence = self._number(
+                    option_chain.get(
+                        "source_confidence"
+                    )
+                )
 
         return [
             option_confidence,
@@ -905,7 +908,7 @@ class MarketSnapshotEngine:
 
         confidence_values = (
             self._collect_source_confidences(
-                options_section,
+                options_payload,
                 india_vix,
                 fii_dii,
             )
@@ -1000,14 +1003,26 @@ class MarketSnapshotEngine:
             "cache_path": None,
         }
 
-        snapshot["data_quality"] = {
-            "overall_status": snapshot["data_status"],
-            "source_confidence": snapshot["source_confidence"],
-            "confidence_label": snapshot["confidence"],
-            "analytics_allowed": snapshot["analytics_allowed"],
-            "source_statuses": snapshot["source_statuses"],
-            "warnings": snapshot["warnings"],
+        confidence_sources = {
+            "options": self._number(
+                options_payload.get("source_confidence")
+            ),
+            "india_vix": self._number(
+                india_vix.get("source_confidence")
+            ),
+            "fii_dii": self._number(
+                fii_dii.get("source_confidence")
+            ),
         }
+
+        for source, value in confidence_sources.items():
+            if value is None or not 0.0 <= value <= 100.0:
+                confidence_sources[source] = None
+
+        valid_source_count = sum(
+            value is not None
+            for value in confidence_sources.values()
+        )
 
         snapshot["data_quality"] = {
             "overall_status": snapshot["data_status"],
@@ -1015,6 +1030,11 @@ class MarketSnapshotEngine:
             "confidence_label": snapshot["confidence"],
             "analytics_allowed": snapshot["analytics_allowed"],
             "source_statuses": snapshot["source_statuses"],
+            "confidence_sources": {
+                **confidence_sources,
+                "valid_source_count": valid_source_count,
+                "average": snapshot["source_confidence"],
+            },
             "warnings": snapshot["warnings"],
         }
 
