@@ -450,3 +450,40 @@ def test_snapshot_excludes_invalid_source_confidence_values() -> None:
     assert confidence_sources["fii_dii"] == 80.0
     assert confidence_sources["valid_source_count"] == 1
     assert confidence_sources["average"] == 80.0
+
+
+def test_snapshot_exposes_data_quality_degradation_reasons() -> None:
+    result = MarketSnapshotEngine().build(
+        {
+            "symbol": "NIFTY",
+            "data_status": "LIVE",
+            "analytics_allowed": True,
+            "source_confidence": 90,
+            "errors": [],
+            "option_chain": {},
+            "oi": {},
+            "pcr": {},
+            "max_pain": {},
+        },
+        {
+            "data_status": "STALE",
+            "source_confidence": 70,
+            "risk_regime": "HIGH",
+        },
+        {
+            "data_status": "NO_DATA",
+            "source_confidence": 0,
+            "market_bias": "UNAVAILABLE",
+        },
+    )
+
+    assert result["data_quality"]["degraded_sources"] == [
+        {
+            "source": "india_vix",
+            "status": "STALE",
+        },
+        {
+            "source": "fii_dii",
+            "status": "NO_DATA",
+        },
+    ]

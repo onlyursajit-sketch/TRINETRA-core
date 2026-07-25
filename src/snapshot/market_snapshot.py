@@ -1024,6 +1024,15 @@ class MarketSnapshotEngine:
             for value in confidence_sources.values()
         )
 
+        degraded_sources = [
+            {
+                "source": source,
+                "status": status,
+            }
+            for source, status in snapshot["source_statuses"].items()
+            if status != "LIVE"
+        ]
+
         snapshot["data_quality"] = {
             "overall_status": snapshot["data_status"],
             "source_confidence": snapshot["source_confidence"],
@@ -1035,6 +1044,7 @@ class MarketSnapshotEngine:
                 "valid_source_count": valid_source_count,
                 "average": snapshot["source_confidence"],
             },
+            "degraded_sources": degraded_sources,
             "warnings": snapshot["warnings"],
         }
 
