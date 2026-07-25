@@ -50,6 +50,7 @@ class MarketEngine:
         report_generator: MarketReportGenerator | None = None,
         global_command_center: GlobalCommandCenter | None = None,
         global_report_generator: GlobalMarketReportGenerator | None = None,
+        decision_hub: AIDecisionHub | None = None,
     ) -> None:
         self.options_pipeline = (
             options_pipeline
@@ -74,6 +75,11 @@ class MarketEngine:
         self.global_report_generator = (
             global_report_generator
             or GlobalMarketReportGenerator()
+        )
+
+        self.decision_hub = (
+            decision_hub
+            or AIDecisionHub()
         )
 
     @staticmethod
@@ -176,7 +182,7 @@ class MarketEngine:
             snapshot
         )
 
-        decision = AIDecisionHub().decide(
+        decision = self.decision_hub.decide(
             {
                 "global": global_result,
                 "snapshot": snapshot,

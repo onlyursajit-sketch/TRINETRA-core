@@ -136,3 +136,53 @@ def test_ai_decision_exposes_trade_quality_and_explanation() -> None:
     assert "explanation" in ai_decision
     assert ai_decision["explanation"]["reasons"] == ai_decision["reasons"]
     assert ai_decision["explanation"]["warnings"] == ai_decision["warnings"]
+
+
+class FakeInjectedDecisionHub:
+    def __init__(self) -> None:
+        self.received_market_result = None
+
+    def decide(self, market_result: dict) -> dict:
+        self.received_market_result = market_result
+        return {
+            "decision": "WAIT",
+            "action": "WAIT",
+            "score": 0.0,
+            "confidence_score": 50.0,
+            "confidence": "MODERATE",
+            "risk_score": 0.0,
+            "risk": "LOW",
+            "trade_quality_score": 50.0,
+            "reasons": [],
+            "warnings": [],
+            "explanation": {
+                "summary": "Injected decision hub.",
+                "reasons": [],
+                "warnings": [],
+            },
+            "why": {},
+            "rule": "Decision support only.",
+        }
+
+
+def test_market_engine_accepts_injected_decision_hub() -> None:
+    decision_hub = FakeInjectedDecisionHub()
+
+    engine = MarketEngine(
+        options_pipeline=FakeOptionsPipeline(),
+        snapshot_engine=FakeSnapshotEngine(),
+        report_generator=FakeMarketReportGenerator(),
+        global_command_center=FakeGlobalCommandCenter(),
+        global_report_generator=FakeGlobalReportGenerator(),
+        decision_hub=decision_hub,
+    )
+
+    result = engine.build(
+        "NIFTY",
+        global_payloads={},
+    )
+
+    assert result["ai_decision"]["decision"] == "WAIT"
+    assert decision_hub.received_market_result is not None
+    assert "global" in decision_hub.received_market_result
+    assert "snapshot" in decision_hub.received_market_result
