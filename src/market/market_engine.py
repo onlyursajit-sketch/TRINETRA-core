@@ -142,9 +142,12 @@ class MarketEngine:
                 "Market symbol cannot be empty."
             )
 
+        execution_trace: list[str] = []
+
         options_result = self.options_pipeline.run(
             clean_symbol
         )
+        execution_trace.append("OPTIONS_ANALYTICS")
 
         global_result = (
             self.global_command_center.build(
@@ -153,34 +156,40 @@ class MarketEngine:
                 else {}
             )
         )
+        execution_trace.append("GLOBAL_COMMAND_CENTER")
 
         vix_result = (
             india_vix_payload
             if isinstance(india_vix_payload, dict)
             else self._missing_vix_payload()
         )
+        execution_trace.append("INDIA_VIX")
 
         flows_result = (
             fii_dii_payload
             if isinstance(fii_dii_payload, dict)
             else self._missing_fii_dii_payload()
         )
+        execution_trace.append("FII_DII")
 
         snapshot = self.snapshot_engine.build(
             options_result,
             vix_result,
             flows_result,
         )
+        execution_trace.append("MARKET_SNAPSHOT")
 
         global_report = (
             self.global_report_generator.render(
                 global_result
             )
         )
+        execution_trace.append("GLOBAL_REPORT")
 
         market_report = self.report_generator.render(
             snapshot
         )
+        execution_trace.append("MARKET_REPORT")
 
         decision = self.decision_hub.decide(
             {
@@ -188,6 +197,7 @@ class MarketEngine:
                 "snapshot": snapshot,
             }
         )
+        execution_trace.append("AI_DECISION")
 
         ai_lines = [
             "=" * 68,
@@ -265,6 +275,7 @@ class MarketEngine:
             "global": global_result,
             "snapshot": snapshot,
             "ai_decision": decision,
+            "execution_trace": execution_trace,
             "report": final_report,
         }
 

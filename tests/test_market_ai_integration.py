@@ -186,3 +186,29 @@ def test_market_engine_accepts_injected_decision_hub() -> None:
     assert decision_hub.received_market_result is not None
     assert "global" in decision_hub.received_market_result
     assert "snapshot" in decision_hub.received_market_result
+
+
+def test_market_engine_exposes_execution_trace() -> None:
+    engine = MarketEngine(
+        options_pipeline=FakeOptionsPipeline(),
+        snapshot_engine=FakeSnapshotEngine(),
+        report_generator=FakeMarketReportGenerator(),
+        global_command_center=FakeGlobalCommandCenter(),
+        global_report_generator=FakeGlobalReportGenerator(),
+    )
+
+    result = engine.build(
+        "NIFTY",
+        global_payloads={},
+    )
+
+    assert result["execution_trace"] == [
+        "OPTIONS_ANALYTICS",
+        "GLOBAL_COMMAND_CENTER",
+        "INDIA_VIX",
+        "FII_DII",
+        "MARKET_SNAPSHOT",
+        "GLOBAL_REPORT",
+        "MARKET_REPORT",
+        "AI_DECISION",
+    ]
