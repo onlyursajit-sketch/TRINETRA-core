@@ -73,3 +73,31 @@ def test_non_positive_minimum_risk_reward_is_rejected(
             max_position_pct=20.0,
             min_risk_reward=min_risk_reward,
         )
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [
+        ("capital", float("nan")),
+        ("risk_per_trade_pct", float("inf")),
+        ("max_position_pct", float("-inf")),
+        ("min_risk_reward", float("nan")),
+    ],
+)
+def test_non_finite_risk_config_values_are_rejected(
+    field: str,
+    value: float,
+) -> None:
+    values = {
+        "capital": 100000.0,
+        "risk_per_trade_pct": 1.0,
+        "max_position_pct": 20.0,
+        "min_risk_reward": 2.0,
+    }
+    values[field] = value
+
+    with pytest.raises(
+        ValueError,
+        match="Risk configuration values must be finite numbers",
+    ):
+        RiskConfig(**values)
