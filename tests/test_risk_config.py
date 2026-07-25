@@ -16,3 +16,22 @@ def test_non_positive_capital_is_rejected() -> None:
             max_position_pct=20.0,
             min_risk_reward=2.0,
         )
+
+
+@pytest.mark.parametrize(
+    "risk_per_trade_pct",
+    [0.0, -1.0, 101.0],
+)
+def test_invalid_risk_per_trade_percentage_is_rejected(
+    risk_per_trade_pct: float,
+) -> None:
+    with pytest.raises(
+        ValueError,
+        match="Risk per trade percentage must be between 0 and 100",
+    ):
+        RiskConfig(
+            capital=100000,
+            risk_per_trade_pct=risk_per_trade_pct,
+            max_position_pct=20.0,
+            min_risk_reward=2.0,
+        )

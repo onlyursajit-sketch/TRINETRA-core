@@ -15,3 +15,8 @@ class RiskConfig:
             raise ValueError(
                 "Capital must be greater than zero"
             )
+
+        if not 0 < self.risk_per_trade_pct <= 100:
+            raise ValueError(
+                "Risk per trade percentage must be between 0 and 100"
+            )
