@@ -239,6 +239,12 @@ class WhyEngine:
         except (TypeError, ValueError):
             return 0.0
 
+        if confidence != confidence:
+            return 0.0
+
+        if confidence in (float("inf"), float("-inf")):
+            return 0.0
+
         return max(0.0, min(100.0, confidence))
 
     @staticmethod
@@ -288,6 +294,12 @@ class WhyEngine:
         reasons: list[str],
         warnings: list[str],
     ) -> dict[str, Any]:
+        decision = (
+            decision.strip()
+            if isinstance(decision, str) and decision.strip()
+            else "WAIT"
+        )
+
         confidence_score = cls._normalise_confidence(
             confidence_score
         )

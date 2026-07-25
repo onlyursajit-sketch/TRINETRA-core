@@ -275,3 +275,19 @@ def test_why_engine_contract_validation_detects_invalid_payload() -> None:
     assert "decision must be a non-empty string" in errors
     assert "confidence_score must be between 0 and 100" in errors
     assert "causes must be a list" in errors
+
+
+def test_why_engine_normalises_invalid_contract_inputs() -> None:
+    result = WhyEngine.build(
+        decision="   ",
+        confidence_score=float("nan"),
+        reasons="invalid",
+        warnings={"invalid": True},
+    )
+
+    assert result["decision"] == "WAIT"
+    assert result["confidence_score"] == 0.0
+    assert result["causes"] == []
+    assert result["warnings"] == []
+    assert result["contract_valid"] is True
+    assert result["contract_errors"] == []
