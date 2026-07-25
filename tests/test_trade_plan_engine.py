@@ -78,3 +78,26 @@ def test_trade_plan_explains_low_risk_reward_rejection() -> None:
     assert plan.reason == (
         "Risk-reward 0.60 is below required minimum 2.00."
     )
+
+
+def test_trade_plan_explains_zero_quantity_rejection() -> None:
+    engine = TradePlanEngine(
+        RiskConfig(
+            capital=1000,
+            risk_per_trade_pct=0.1,
+            max_position_pct=1.0,
+            min_risk_reward=2.0,
+        )
+    )
+
+    plan = engine.create(
+        entry=1000.0,
+        stop_loss=999.0,
+        target=1002.0,
+    )
+
+    assert plan.approved is False
+    assert plan.quantity == 0
+    assert plan.reason == (
+        "Trade rejected because position quantity is zero."
+    )
