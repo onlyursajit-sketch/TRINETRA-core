@@ -72,3 +72,24 @@ def test_non_positive_entry_is_rejected() -> None:
             stop_loss=95.0,
             target=110.0,
         )
+
+
+def test_non_positive_stop_loss_is_rejected() -> None:
+    sizer = PositionSizer(
+        RiskConfig(
+            capital=100000,
+            risk_per_trade_pct=1.0,
+            max_position_pct=20.0,
+            min_risk_reward=2.0,
+        )
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="Stop-loss price must be greater than zero",
+    ):
+        sizer.calculate(
+            entry=100.0,
+            stop_loss=0.0,
+            target=110.0,
+        )
