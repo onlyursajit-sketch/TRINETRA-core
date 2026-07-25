@@ -4,7 +4,7 @@ from typing import Any
 
 
 class WhyEngine:
-    """Build structured decision causes, warnings, and dominant drivers."""
+    """Build structured causes, warnings, dominant drivers, and narrative."""
 
     _STRENGTH_RANK = {
         "WEAK": 1,
@@ -153,6 +153,50 @@ class WhyEngine:
             ),
         )
 
+    @staticmethod
+    def _build_narrative(
+        *,
+        decision: str,
+        bullish: dict[str, Any] | None,
+        bearish: dict[str, Any] | None,
+        risk: dict[str, Any] | None,
+    ) -> dict[str, str | None]:
+        if decision == "BUY_BIAS" and bullish is not None:
+            headline = (
+                f"{decision} supported by bullish "
+                f"{bullish['category']}."
+            )
+        elif decision == "SELL_BIAS" and bearish is not None:
+            headline = (
+                f"{decision} supported by bearish "
+                f"{bearish['category']}."
+            )
+        else:
+            headline = f"{decision} has no dominant directional driver."
+
+        counter_signal = (
+            f"Primary counter-signal: bearish {bearish['category']}."
+            if decision == "BUY_BIAS" and bearish is not None
+            else (
+                f"Primary counter-signal: bullish {bullish['category']}."
+                if decision == "SELL_BIAS" and bullish is not None
+                else None
+            )
+        )
+
+        risk_summary = (
+            f"Primary risk: {risk['severity']} "
+            f"{risk['category']} warning."
+            if risk is not None
+            else None
+        )
+
+        return {
+            "headline": headline,
+            "counter_signal": counter_signal,
+            "risk": risk_summary,
+        }
+
     @classmethod
     def build(
         cls,
@@ -165,6 +209,10 @@ class WhyEngine:
         causes = cls._causes(reasons)
         structured_warnings = cls._warnings(warnings)
 
+        bullish = cls._dominant_cause(causes, "BULLISH")
+        bearish = cls._dominant_cause(causes, "BEARISH")
+        risk = cls._dominant_warning(structured_warnings)
+
         return {
             "schema_version": "1.0",
             "decision": decision,
@@ -172,8 +220,14 @@ class WhyEngine:
             "causes": causes,
             "warnings": structured_warnings,
             "dominant_drivers": {
-                "bullish": cls._dominant_cause(causes, "BULLISH"),
-                "bearish": cls._dominant_cause(causes, "BEARISH"),
-                "risk": cls._dominant_warning(structured_warnings),
+                "bullish": bullish,
+                "bearish": bearish,
+                "risk": risk,
             },
+            "narrative": cls._build_narrative(
+                decision=decision,
+                bullish=bullish,
+                bearish=bearish,
+                risk=risk,
+            ),
         }

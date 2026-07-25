@@ -123,3 +123,30 @@ def test_why_engine_identifies_dominant_drivers() -> None:
 
     assert result["dominant_drivers"]["risk"]["category"] == "VOLATILITY"
     assert result["dominant_drivers"]["risk"]["severity"] == "CRITICAL"
+
+
+def test_why_engine_builds_narrative_summary() -> None:
+    result = WhyEngine.build(
+        decision="BUY_BIAS",
+        confidence_score=91.0,
+        reasons=[
+            "Put-call ratio structure is bullish.",
+            "Open interest structure is bearish.",
+            "Bullish multi-signal confluence strengthens market conviction.",
+        ],
+        warnings=[
+            "India VIX is extremely elevated.",
+        ],
+    )
+
+    assert result["narrative"]["headline"] == (
+        "BUY_BIAS supported by bullish CONFLUENCE."
+    )
+
+    assert result["narrative"]["counter_signal"] == (
+        "Primary counter-signal: bearish OPEN_INTEREST."
+    )
+
+    assert result["narrative"]["risk"] == (
+        "Primary risk: CRITICAL VOLATILITY warning."
+    )
