@@ -221,6 +221,26 @@ class WhyEngine:
             ),
         }
 
+    @staticmethod
+    def _normalise_messages(messages: Any) -> list[str]:
+        if not isinstance(messages, (list, tuple)):
+            return []
+
+        return [
+            message.strip()
+            for message in messages
+            if isinstance(message, str) and message.strip()
+        ]
+
+    @staticmethod
+    def _normalise_confidence(value: Any) -> float:
+        try:
+            confidence = float(value)
+        except (TypeError, ValueError):
+            return 0.0
+
+        return max(0.0, min(100.0, confidence))
+
     @classmethod
     def build(
         cls,
@@ -230,6 +250,12 @@ class WhyEngine:
         reasons: list[str],
         warnings: list[str],
     ) -> dict[str, Any]:
+        confidence_score = cls._normalise_confidence(
+            confidence_score
+        )
+        reasons = cls._normalise_messages(reasons)
+        warnings = cls._normalise_messages(warnings)
+
         causes = cls._causes(reasons)
         structured_warnings = cls._warnings(warnings)
 

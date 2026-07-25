@@ -213,3 +213,30 @@ def test_why_engine_builds_no_trade_narrative() -> None:
     assert result["narrative"]["risk"] == (
         "Primary risk: HIGH DATA_FRESHNESS warning."
     )
+
+
+def test_why_engine_handles_malformed_inputs_defensively() -> None:
+    result = WhyEngine.build(
+        decision="WAIT",
+        confidence_score=150.0,
+        reasons=[
+            "",
+            "  Put-call ratio structure is bullish.  ",
+            None,
+        ],
+        warnings=[
+            None,
+            "  Market data is stale.  ",
+            "",
+        ],
+    )
+
+    assert result["confidence_score"] == 100.0
+
+    assert len(result["causes"]) == 1
+    assert result["causes"][0]["message"] == (
+        "Put-call ratio structure is bullish."
+    )
+
+    assert len(result["warnings"]) == 1
+    assert result["warnings"][0]["message"] == "Market data is stale."
