@@ -9,3 +9,9 @@ class RiskConfig:
     risk_per_trade_pct: float = 1.0
     max_position_pct: float = 20.0
     min_risk_reward: float = 2.0
+
+    def __post_init__(self) -> None:
+        if self.capital <= 0:
+            raise ValueError(
+                "Capital must be greater than zero"
+            )
