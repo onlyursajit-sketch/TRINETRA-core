@@ -466,3 +466,47 @@ def test_decision_scores_strong_strike_cluster_resistance() -> None:
         for reason in result["explanation"]["reasons"]
     )
 
+def test_decision_rewards_bullish_multi_signal_confluence() -> None:
+    from src.decision.ai_decision import AIDecisionHub
+
+    result = AIDecisionHub().decide({
+        "snapshot": {
+            "market_status": "LIVE",
+            "analytics_allowed": True,
+            "source_confidence": 90,
+            "confidence": "HIGH",
+            "institutional_score": 0,
+            "pcr": {
+                "overall_pcr": 1.10,
+                "market_bias": "BULLISH",
+            },
+            "oi": {
+                "market_bias": "BULLISH",
+            },
+            "volume_analysis": {
+                "market_bias": "BULLISH",
+            },
+            "strike_clusters": {
+                "cluster_count": 1,
+                "strongest_support": {
+                    "cluster_start": 25000,
+                    "cluster_end": 25099,
+                    "bias": "SUPPORT",
+                    "strength": 1800,
+                },
+                "strongest_resistance": None,
+                "top_clusters": [],
+            },
+        },
+        "global": {
+            "source_confidence": 90,
+            "global_bias": "NEUTRAL",
+        },
+    })
+
+    assert result["score"] >= 30
+    assert any(
+        "confluence" in reason.lower()
+        for reason in result["explanation"]["reasons"]
+    )
+

@@ -329,6 +329,9 @@ class AIDecisionHub:
 
         strike_clusters = snapshot.get("strike_clusters")
 
+        strongest_support = None
+        strongest_resistance = None
+
         if isinstance(strike_clusters, dict):
             strongest_support = strike_clusters.get("strongest_support")
             strongest_resistance = strike_clusters.get("strongest_resistance")
@@ -396,6 +399,32 @@ class AIDecisionHub:
                     reasons.append(
                         "Strong strike-cluster resistance adds bearish pressure."
                     )
+
+        bullish_confluence_signals = 0
+
+        if isinstance(pcr, dict) and self._text(pcr.get("market_bias")) == "BULLISH":
+            bullish_confluence_signals += 1
+
+        if isinstance(oi, dict) and self._text(oi.get("market_bias")) == "BULLISH":
+            bullish_confluence_signals += 1
+
+        if (
+            isinstance(volume_analysis, dict)
+            and self._text(volume_analysis.get("market_bias")) == "BULLISH"
+        ):
+            bullish_confluence_signals += 1
+
+        if (
+            isinstance(strongest_support, dict)
+            and self._number(strongest_support.get("strength"), 0.0) > 0
+        ):
+            bullish_confluence_signals += 1
+
+        if bullish_confluence_signals >= 3:
+            reasons.append(
+                "Bullish multi-signal confluence strengthens market conviction."
+            )
+
 
         score = round(
             self._clamp(
