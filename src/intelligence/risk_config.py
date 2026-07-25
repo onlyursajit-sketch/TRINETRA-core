@@ -20,3 +20,8 @@ class RiskConfig:
             raise ValueError(
                 "Risk per trade percentage must be between 0 and 100"
             )
+
+        if not 0 < self.max_position_pct <= 100:
+            raise ValueError(
+                "Maximum position percentage must be between 0 and 100"
+            )
