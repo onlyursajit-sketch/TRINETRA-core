@@ -172,8 +172,19 @@ class WhyEngine:
                 f"{decision} supported by bearish "
                 f"{bearish['category']}."
             )
+        elif decision == "WAIT":
+            headline = (
+                "WAIT until a dominant directional driver emerges."
+            )
+        elif decision == "NO_TRADE":
+            headline = (
+                "NO_TRADE because decision-quality requirements "
+                "are not met."
+            )
         else:
-            headline = f"{decision} has no dominant directional driver."
+            headline = (
+                f"{decision} has no dominant directional driver."
+            )
 
         counter_signal = (
             f"Primary counter-signal: bearish {bearish['category']}."

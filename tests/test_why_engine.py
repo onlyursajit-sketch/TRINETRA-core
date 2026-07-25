@@ -166,3 +166,50 @@ def test_why_engine_aligns_narrative_with_confidence() -> None:
     assert result["narrative"]["confidence_statement"] == (
         "Decision confidence is HIGH at 91.0%."
     )
+
+
+def test_why_engine_builds_sell_bias_narrative() -> None:
+    result = WhyEngine.build(
+        decision="SELL_BIAS",
+        confidence_score=84.0,
+        reasons=[
+            "Open interest structure is bearish.",
+        ],
+        warnings=[],
+    )
+
+    assert result["narrative"]["headline"] == (
+        "SELL_BIAS supported by bearish OPEN_INTEREST."
+    )
+
+
+def test_why_engine_builds_wait_narrative() -> None:
+    result = WhyEngine.build(
+        decision="WAIT",
+        confidence_score=55.0,
+        reasons=[],
+        warnings=[],
+    )
+
+    assert result["narrative"]["headline"] == (
+        "WAIT until a dominant directional driver emerges."
+    )
+    assert result["narrative"]["counter_signal"] is None
+
+
+def test_why_engine_builds_no_trade_narrative() -> None:
+    result = WhyEngine.build(
+        decision="NO_TRADE",
+        confidence_score=0.0,
+        reasons=[],
+        warnings=[
+            "Market data is stale.",
+        ],
+    )
+
+    assert result["narrative"]["headline"] == (
+        "NO_TRADE because decision-quality requirements are not met."
+    )
+    assert result["narrative"]["risk"] == (
+        "Primary risk: HIGH DATA_FRESHNESS warning."
+    )
