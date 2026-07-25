@@ -1033,6 +1033,18 @@ class MarketSnapshotEngine:
             if status != "LIVE"
         ]
 
+        blocking_reasons: list[str] = []
+
+        if not snapshot["analytics_allowed"]:
+            blocking_reasons.append(
+                "OPTIONS_ANALYTICS_BLOCKED"
+            )
+
+        if degraded_sources:
+            blocking_reasons.append(
+                "SOURCE_DATA_INCOMPLETE"
+            )
+
         snapshot["data_quality"] = {
             "overall_status": snapshot["data_status"],
             "source_confidence": snapshot["source_confidence"],
@@ -1045,6 +1057,7 @@ class MarketSnapshotEngine:
                 "average": snapshot["source_confidence"],
             },
             "degraded_sources": degraded_sources,
+            "blocking_reasons": blocking_reasons,
             "warnings": snapshot["warnings"],
         }
 

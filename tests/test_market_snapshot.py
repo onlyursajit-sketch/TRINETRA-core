@@ -487,3 +487,35 @@ def test_snapshot_exposes_data_quality_degradation_reasons() -> None:
             "status": "NO_DATA",
         },
     ]
+
+
+def test_snapshot_exposes_analytics_blocking_reasons() -> None:
+    result = MarketSnapshotEngine().build(
+        {
+            "symbol": "NIFTY",
+            "data_status": "NO_DATA",
+            "analytics_allowed": False,
+            "source_confidence": 0,
+            "errors": [],
+            "option_chain": {},
+            "oi": {},
+            "pcr": {},
+            "max_pain": {},
+        },
+        {
+            "data_status": "STALE",
+            "source_confidence": 40,
+            "risk_regime": "HIGH",
+        },
+        {
+            "data_status": "NO_DATA",
+            "source_confidence": 0,
+            "market_bias": "UNAVAILABLE",
+        },
+    )
+
+    assert result["analytics_allowed"] is False
+    assert result["data_quality"]["blocking_reasons"] == [
+        "OPTIONS_ANALYTICS_BLOCKED",
+        "SOURCE_DATA_INCOMPLETE",
+    ]
