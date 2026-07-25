@@ -38,6 +38,11 @@ class PositionSizer:
                 "Stop-loss price must be greater than zero"
             )
 
+        if target <= 0:
+            raise ValueError(
+                "Target price must be greater than zero"
+            )
+
         risk_per_share = abs(entry - stop_loss)
 
         if risk_per_share <= 0:
