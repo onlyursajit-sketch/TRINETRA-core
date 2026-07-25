@@ -114,3 +114,38 @@ def test_non_positive_target_is_rejected() -> None:
             stop_loss=95.0,
             target=0.0,
         )
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [
+        ("entry", float("nan")),
+        ("stop_loss", float("inf")),
+        ("target", float("-inf")),
+    ],
+)
+def test_non_finite_trade_prices_are_rejected(
+    field: str,
+    value: float,
+) -> None:
+    sizer = PositionSizer(
+        RiskConfig(
+            capital=100000,
+            risk_per_trade_pct=1.0,
+            max_position_pct=20.0,
+            min_risk_reward=2.0,
+        )
+    )
+
+    prices = {
+        "entry": 100.0,
+        "stop_loss": 95.0,
+        "target": 110.0,
+    }
+    prices[field] = value
+
+    with pytest.raises(
+        ValueError,
+        match="Trade prices must be finite numbers",
+    ):
+        sizer.calculate(**prices)

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from math import isfinite
 
 from src.intelligence.risk_config import RiskConfig
 
@@ -27,6 +28,14 @@ class PositionSizer:
         stop_loss: float,
         target: float,
     ) -> PositionResult:
+
+        if not all(
+            isfinite(price)
+            for price in (entry, stop_loss, target)
+        ):
+            raise ValueError(
+                "Trade prices must be finite numbers"
+            )
 
         if entry <= 0:
             raise ValueError(
