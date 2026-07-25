@@ -4,7 +4,20 @@ from typing import Any
 
 
 class WhyEngine:
-    """Build structured decision causes and classified warnings."""
+    """Build structured decision causes, warnings, and dominant drivers."""
+
+    _STRENGTH_RANK = {
+        "WEAK": 1,
+        "MODERATE": 2,
+        "STRONG": 3,
+    }
+
+    _SEVERITY_RANK = {
+        "LOW": 1,
+        "MODERATE": 2,
+        "HIGH": 3,
+        "CRITICAL": 4,
+    }
 
     @staticmethod
     def _cause_metadata(message: str) -> dict[str, str]:
@@ -59,11 +72,7 @@ class WhyEngine:
         if "vix" in text:
             category = "VOLATILITY"
             source = "INDIA_VIX"
-            severity = (
-                "CRITICAL"
-                if "extremely" in text
-                else "HIGH"
-            )
+            severity = "CRITICAL" if "extremely" in text else "HIGH"
         elif "source confidence" in text:
             category = "DATA_QUALITY"
             source = "SOURCE_CONFIDENCE"
@@ -106,6 +115,45 @@ class WhyEngine:
         ]
 
     @classmethod
+    def _dominant_cause(
+        cls,
+        causes: list[dict[str, Any]],
+        bias: str,
+    ) -> dict[str, Any] | None:
+        matching = [
+            cause
+            for cause in causes
+            if cause.get("bias") == bias
+        ]
+
+        if not matching:
+            return None
+
+        return max(
+            matching,
+            key=lambda cause: cls._STRENGTH_RANK.get(
+                str(cause.get("strength")),
+                0,
+            ),
+        )
+
+    @classmethod
+    def _dominant_warning(
+        cls,
+        warnings: list[dict[str, Any]],
+    ) -> dict[str, Any] | None:
+        if not warnings:
+            return None
+
+        return max(
+            warnings,
+            key=lambda warning: cls._SEVERITY_RANK.get(
+                str(warning.get("severity")),
+                0,
+            ),
+        )
+
+    @classmethod
     def build(
         cls,
         *,
@@ -114,10 +162,18 @@ class WhyEngine:
         reasons: list[str],
         warnings: list[str],
     ) -> dict[str, Any]:
+        causes = cls._causes(reasons)
+        structured_warnings = cls._warnings(warnings)
+
         return {
             "schema_version": "1.0",
             "decision": decision,
             "confidence_score": confidence_score,
-            "causes": cls._causes(reasons),
-            "warnings": cls._warnings(warnings),
+            "causes": causes,
+            "warnings": structured_warnings,
+            "dominant_drivers": {
+                "bullish": cls._dominant_cause(causes, "BULLISH"),
+                "bearish": cls._dominant_cause(causes, "BEARISH"),
+                "risk": cls._dominant_warning(structured_warnings),
+            },
         }

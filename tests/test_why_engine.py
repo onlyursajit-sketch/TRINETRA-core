@@ -98,3 +98,28 @@ def test_why_engine_classifies_warning_severity() -> None:
     assert result["warnings"][2]["category"] == "DATA_FRESHNESS"
     assert result["warnings"][2]["source"] == "MARKET_DATA"
     assert result["warnings"][2]["severity"] == "HIGH"
+
+
+def test_why_engine_identifies_dominant_drivers() -> None:
+    result = WhyEngine.build(
+        decision="BUY_BIAS",
+        confidence_score=91.0,
+        reasons=[
+            "Put-call ratio structure is bullish.",
+            "Open interest structure is bearish.",
+            "Bullish multi-signal confluence strengthens market conviction.",
+        ],
+        warnings=[
+            "Source confidence is low.",
+            "India VIX is extremely elevated.",
+        ],
+    )
+
+    assert result["dominant_drivers"]["bullish"]["category"] == "CONFLUENCE"
+    assert result["dominant_drivers"]["bullish"]["strength"] == "STRONG"
+
+    assert result["dominant_drivers"]["bearish"]["category"] == "OPEN_INTEREST"
+    assert result["dominant_drivers"]["bearish"]["bias"] == "BEARISH"
+
+    assert result["dominant_drivers"]["risk"]["category"] == "VOLATILITY"
+    assert result["dominant_drivers"]["risk"]["severity"] == "CRITICAL"
