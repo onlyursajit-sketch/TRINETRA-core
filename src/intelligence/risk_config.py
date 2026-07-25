@@ -12,14 +12,25 @@ class RiskConfig:
     min_risk_reward: float = 2.0
 
     def __post_init__(self) -> None:
+        values = (
+            self.capital,
+            self.risk_per_trade_pct,
+            self.max_position_pct,
+            self.min_risk_reward,
+        )
+
+        if not all(
+            isinstance(value, (int, float))
+            and not isinstance(value, bool)
+            for value in values
+        ):
+            raise ValueError(
+                "Risk configuration values must be numeric"
+            )
+
         if not all(
             isfinite(value)
-            for value in (
-                self.capital,
-                self.risk_per_trade_pct,
-                self.max_position_pct,
-                self.min_risk_reward,
-            )
+            for value in values
         ):
             raise ValueError(
                 "Risk configuration values must be finite numbers"

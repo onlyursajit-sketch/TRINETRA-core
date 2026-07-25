@@ -101,3 +101,31 @@ def test_non_finite_risk_config_values_are_rejected(
         match="Risk configuration values must be finite numbers",
     ):
         RiskConfig(**values)
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [
+        ("capital", "100000"),
+        ("risk_per_trade_pct", True),
+        ("max_position_pct", None),
+        ("min_risk_reward", "2.0"),
+    ],
+)
+def test_non_numeric_risk_config_values_are_rejected(
+    field: str,
+    value: object,
+) -> None:
+    values = {
+        "capital": 100000.0,
+        "risk_per_trade_pct": 1.0,
+        "max_position_pct": 20.0,
+        "min_risk_reward": 2.0,
+    }
+    values[field] = value
+
+    with pytest.raises(
+        ValueError,
+        match="Risk configuration values must be numeric",
+    ):
+        RiskConfig(**values)
