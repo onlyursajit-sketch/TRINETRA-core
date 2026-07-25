@@ -240,3 +240,38 @@ def test_why_engine_handles_malformed_inputs_defensively() -> None:
 
     assert len(result["warnings"]) == 1
     assert result["warnings"][0]["message"] == "Market data is stale."
+
+
+def test_why_engine_exposes_valid_contract() -> None:
+    result = WhyEngine.build(
+        decision="BUY_BIAS",
+        confidence_score=85.0,
+        reasons=[
+            "Put-call ratio structure is bullish.",
+        ],
+        warnings=[
+            "Market data is stale.",
+        ],
+    )
+
+    assert result["schema_version"] == "1.0"
+    assert result["contract_valid"] is True
+    assert result["contract_errors"] == []
+
+
+def test_why_engine_contract_validation_detects_invalid_payload() -> None:
+    payload = {
+        "schema_version": "1.0",
+        "decision": "",
+        "confidence_score": 101.0,
+        "causes": "invalid",
+        "warnings": [],
+        "dominant_drivers": {},
+        "narrative": {},
+    }
+
+    errors = WhyEngine.validate_contract(payload)
+
+    assert "decision must be a non-empty string" in errors
+    assert "confidence_score must be between 0 and 100" in errors
+    assert "causes must be a list" in errors

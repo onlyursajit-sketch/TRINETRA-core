@@ -241,6 +241,44 @@ class WhyEngine:
 
         return max(0.0, min(100.0, confidence))
 
+    @staticmethod
+    def validate_contract(payload: Any) -> list[str]:
+        errors: list[str] = []
+
+        if not isinstance(payload, dict):
+            return ["payload must be a dictionary"]
+
+        if payload.get("schema_version") != "1.0":
+            errors.append("schema_version must be 1.0")
+
+        decision = payload.get("decision")
+        if not isinstance(decision, str) or not decision.strip():
+            errors.append("decision must be a non-empty string")
+
+        confidence_score = payload.get("confidence_score")
+        if (
+            not isinstance(confidence_score, (int, float))
+            or isinstance(confidence_score, bool)
+            or not 0.0 <= float(confidence_score) <= 100.0
+        ):
+            errors.append(
+                "confidence_score must be between 0 and 100"
+            )
+
+        if not isinstance(payload.get("causes"), list):
+            errors.append("causes must be a list")
+
+        if not isinstance(payload.get("warnings"), list):
+            errors.append("warnings must be a list")
+
+        if not isinstance(payload.get("dominant_drivers"), dict):
+            errors.append("dominant_drivers must be a dictionary")
+
+        if not isinstance(payload.get("narrative"), dict):
+            errors.append("narrative must be a dictionary")
+
+        return errors
+
     @classmethod
     def build(
         cls,
@@ -263,7 +301,7 @@ class WhyEngine:
         bearish = cls._dominant_cause(causes, "BEARISH")
         risk = cls._dominant_warning(structured_warnings)
 
-        return {
+        payload = {
             "schema_version": "1.0",
             "decision": decision,
             "confidence_score": confidence_score,
@@ -282,3 +320,9 @@ class WhyEngine:
                 risk=risk,
             ),
         }
+
+        contract_errors = cls.validate_contract(payload)
+        payload["contract_valid"] = not contract_errors
+        payload["contract_errors"] = contract_errors
+
+        return payload
