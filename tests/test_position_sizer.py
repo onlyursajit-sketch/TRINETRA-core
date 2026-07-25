@@ -149,3 +149,24 @@ def test_non_finite_trade_prices_are_rejected(
         match="Trade prices must be finite numbers",
     ):
         sizer.calculate(**prices)
+
+
+def test_target_equal_to_entry_is_rejected() -> None:
+    sizer = PositionSizer(
+        RiskConfig(
+            capital=100000,
+            risk_per_trade_pct=1.0,
+            max_position_pct=20.0,
+            min_risk_reward=2.0,
+        )
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="Target price must differ from entry price",
+    ):
+        sizer.calculate(
+            entry=100.0,
+            stop_loss=95.0,
+            target=100.0,
+        )

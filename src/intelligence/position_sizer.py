@@ -52,6 +52,11 @@ class PositionSizer:
                 "Target price must be greater than zero"
             )
 
+        if target == entry:
+            raise ValueError(
+                "Target price must differ from entry price"
+            )
+
         risk_per_share = abs(entry - stop_loss)
 
         if risk_per_share <= 0:
