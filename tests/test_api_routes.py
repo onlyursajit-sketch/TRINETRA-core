@@ -817,3 +817,24 @@ def test_trade_plan_api_rejects_invalid_risk_config() -> None:
     assert response.json()["detail"] == (
         "Risk per trade percentage must be between 0 and 100"
     )
+
+
+def test_trade_plan_api_rejects_invalid_max_position_percentage() -> None:
+    response = client.post(
+        "/trade/plan",
+        headers={"X-API-Key": "test-key"},
+        json={
+            "capital": 100000,
+            "entry": 100.0,
+            "stop_loss": 95.0,
+            "target": 110.0,
+            "risk_per_trade_pct": 1.0,
+            "max_position_pct": 101.0,
+            "min_risk_reward": 2.0,
+        },
+    )
+
+    assert response.status_code == 400
+    assert response.json()["detail"] == (
+        "Maximum position percentage must be between 0 and 100"
+    )
