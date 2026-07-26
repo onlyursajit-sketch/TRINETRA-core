@@ -31,14 +31,14 @@ def create_trade_plan(
     payload: TradePlanRequest,
     _: None = Depends(require_api_key),
 ) -> dict:
-    config = RiskConfig(
-        capital=payload.capital,
-        risk_per_trade_pct=payload.risk_per_trade_pct,
-        max_position_pct=payload.max_position_pct,
-        min_risk_reward=payload.min_risk_reward,
-    )
-
     try:
+        config = RiskConfig(
+            capital=payload.capital,
+            risk_per_trade_pct=payload.risk_per_trade_pct,
+            max_position_pct=payload.max_position_pct,
+            min_risk_reward=payload.min_risk_reward,
+        )
+
         plan = TradePlanEngine(config).create(
             entry=payload.entry,
             stop_loss=payload.stop_loss,
