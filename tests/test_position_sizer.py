@@ -205,3 +205,34 @@ def test_stop_loss_and_target_must_be_on_opposite_sides(
             stop_loss=stop_loss,
             target=target,
         )
+
+
+@pytest.mark.parametrize(
+    ("entry", "stop_loss", "target", "expected_direction"),
+    [
+        (100.0, 95.0, 110.0, "LONG"),
+        (100.0, 105.0, 90.0, "SHORT"),
+    ],
+)
+def test_position_result_exposes_trade_direction(
+    entry: float,
+    stop_loss: float,
+    target: float,
+    expected_direction: str,
+) -> None:
+    sizer = PositionSizer(
+        RiskConfig(
+            capital=100000,
+            risk_per_trade_pct=1.0,
+            max_position_pct=20.0,
+            min_risk_reward=2.0,
+        )
+    )
+
+    result = sizer.calculate(
+        entry=entry,
+        stop_loss=stop_loss,
+        target=target,
+    )
+
+    assert result.direction == expected_direction

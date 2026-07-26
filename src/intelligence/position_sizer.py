@@ -14,6 +14,7 @@ class PositionResult:
     stop_loss: float
     target: float
     risk_reward: float
+    direction: str = "UNKNOWN"
 
 
 class PositionSizer:
@@ -99,6 +100,12 @@ class PositionSizer:
             else 0.0
         )
 
+        direction = (
+            "LONG"
+            if target > entry
+            else "SHORT"
+        )
+
         return PositionResult(
             quantity=quantity,
             capital_at_risk=quantity * risk_per_share,
@@ -106,4 +113,5 @@ class PositionSizer:
             stop_loss=stop_loss,
             target=target,
             risk_reward=round(risk_reward, 2),
+            direction=direction,
         )
