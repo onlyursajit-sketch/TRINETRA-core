@@ -756,3 +756,22 @@ def test_trade_plan_api_exposes_direction() -> None:
 
     assert response.status_code == 200
     assert response.json()["direction"] == "LONG"
+
+
+def test_trade_plan_api_exposes_short_direction() -> None:
+    response = client.post(
+        "/trade/plan",
+        headers={"X-API-Key": "test-key"},
+        json={
+            "capital": 100000,
+            "entry": 100.0,
+            "stop_loss": 105.0,
+            "target": 90.0,
+            "risk_per_trade_pct": 1.0,
+            "max_position_pct": 20.0,
+            "min_risk_reward": 2.0,
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json()["direction"] == "SHORT"
