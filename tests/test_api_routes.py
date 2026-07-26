@@ -964,3 +964,24 @@ def test_trade_plan_api_rejects_non_positive_risk_percentage() -> None:
 
     detail = response.json()["detail"]
     assert detail[0]["loc"][-1] == "risk_per_trade_pct"
+
+
+def test_trade_plan_api_rejects_non_positive_max_position_percentage() -> None:
+    response = client.post(
+        "/trade/plan",
+        headers={"X-API-Key": "test-key"},
+        json={
+            "capital": 100000,
+            "entry": 100.0,
+            "stop_loss": 95.0,
+            "target": 110.0,
+            "risk_per_trade_pct": 1.0,
+            "max_position_pct": 0.0,
+            "min_risk_reward": 2.0,
+        },
+    )
+
+    assert response.status_code == 422
+
+    detail = response.json()["detail"]
+    assert detail[0]["loc"][-1] == "max_position_pct"
