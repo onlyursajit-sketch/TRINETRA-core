@@ -18,6 +18,7 @@ class TradePlan:
     position_value: float
     risk_reward: float
     reason: str
+    direction: str = "UNKNOWN"
 
 
 class TradePlanEngine:
@@ -64,4 +65,5 @@ class TradePlanEngine:
             position_value=result.position_value,
             risk_reward=result.risk_reward,
             reason=reason,
+            direction=result.direction,
         )

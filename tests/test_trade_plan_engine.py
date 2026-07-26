@@ -101,3 +101,34 @@ def test_trade_plan_explains_zero_quantity_rejection() -> None:
     assert plan.reason == (
         "Trade rejected because position quantity is zero."
     )
+
+
+def test_trade_plan_exposes_trade_direction() -> None:
+    long_plan = TradePlanEngine(
+        RiskConfig(
+            capital=100000,
+            risk_per_trade_pct=1.0,
+            max_position_pct=20.0,
+            min_risk_reward=2.0,
+        )
+    ).create(
+        entry=100.0,
+        stop_loss=95.0,
+        target=110.0,
+    )
+
+    short_plan = TradePlanEngine(
+        RiskConfig(
+            capital=100000,
+            risk_per_trade_pct=1.0,
+            max_position_pct=20.0,
+            min_risk_reward=2.0,
+        )
+    ).create(
+        entry=100.0,
+        stop_loss=105.0,
+        target=90.0,
+    )
+
+    assert long_plan.direction == "LONG"
+    assert short_plan.direction == "SHORT"
