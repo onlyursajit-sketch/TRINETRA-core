@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import asdict
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
 from src.api.auth import require_api_key
@@ -38,10 +38,16 @@ def create_trade_plan(
         min_risk_reward=payload.min_risk_reward,
     )
 
-    plan = TradePlanEngine(config).create(
-        entry=payload.entry,
-        stop_loss=payload.stop_loss,
-        target=payload.target,
-    )
+    try:
+        plan = TradePlanEngine(config).create(
+            entry=payload.entry,
+            stop_loss=payload.stop_loss,
+            target=payload.target,
+        )
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=400,
+            detail=str(exc),
+        ) from exc
 
     return asdict(plan)
